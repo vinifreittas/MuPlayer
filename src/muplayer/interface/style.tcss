@@ -1,0 +1,437 @@
+/* ==========================================================================
+   GLOBAL THEME
+   ========================================================================== */
+Screen {
+    background: $background;
+    layout: vertical;
+}
+
+/* ==========================================================================
+   Configurations Pop-up
+   ========================================================================== */
+Configurations {
+    align: center middle;
+    background: transparent;
+}
+
+Configurations #container {
+    width: 60;
+    height: auto;
+    padding: 1 2;
+    background: $surface;
+    border: $primary;
+}
+
+/* The Header Row */
+Configurations #config-header {
+    height: auto;
+    margin-bottom: 1;
+}
+
+/* 1fr makes the title take up all remaining horizontal space, pushing the X to the right */
+Configurations #config-title {
+    color: $accent;
+    text-style: bold;
+    width: 1fr;
+    text-align: center;
+    margin-top: 0;
+}
+
+/* Fixed width for the close button at the end of the row */
+Configurations #config-close-btn {
+    color: $error;
+    text-style: bold;
+    width: 3;
+    text-align: center;
+}
+
+Configurations #config-close-btn:hover {
+    background: $error;
+    color: $text;
+}
+
+/* Core form field spacing */
+Configurations Label {
+    margin-top: 1;
+    text-style: bold;
+}
+
+Configurations .toggle-container {
+    height: auto;
+    align: left middle;
+    margin-top: 1;
+    margin-bottom: 1;
+}
+
+Configurations .toggle-container Label {
+    margin-top: 0;
+    margin-right: 2;
+}
+
+/* ==========================================================================
+   HEADER SECTION
+   ========================================================================== */
+Header {
+    dock: top;
+    layout: horizontal;
+    width: 100%;
+    height: 4;
+    padding: 0 2;
+    background: $background;
+    align: left middle;
+    border-bottom: solid $surface-lighten-2;
+}
+
+Header #title {
+    width: 20%;
+    height: 100%;
+    color: $primary;
+    text-style: bold;
+    content-align: left middle;
+}
+
+Header #title:hover {
+    color: $primary-lighten-1;
+}
+
+Header #search-box {
+    width: 50%;
+    height: 3;
+    background: transparent;
+    color: $text-muted;
+    border: round $panel;
+}
+
+Header #search-box:focus {
+    border: round $accent;
+}
+
+Header #settings-btn {
+    width: 30%;
+    height: 100%;
+    color: $text-muted;
+    content-align: right middle;
+}
+
+Header #settings-btn:hover {
+    color: $text;
+}
+
+/* ==========================================================================
+   MAIN LAYOUT
+   ========================================================================== */
+#main {
+    layout: horizontal;
+    width: 100%;
+    height: 1fr;
+    background: $background;
+}
+
+/* ==========================================================================
+   SIDEBAR (Left Column)
+   ========================================================================== */
+Sidebar {
+    width: 28;
+    height: 100%;
+    padding: 1 1;
+    background: $background;
+    border-right: solid $surface-lighten-1;
+}
+
+Sidebar .section-title {
+    margin: 1 0 0 2;
+    color: $text-muted;
+    text-style: bold;
+}
+
+Sidebar ListView {
+    height: auto;
+    margin: 1 0;
+    padding: 0 1;
+    background: transparent;
+    border: none;
+}
+
+Sidebar ListItem {
+    height: 1;
+    padding: 0 1;
+    background: transparent;
+    color: $text-muted;
+}
+
+Sidebar ListItem:hover {
+    background: transparent;
+    color: $text;
+}
+
+Sidebar ListItem.-highlight {
+    background: $surface-lighten-1;
+    color: $text;
+    text-style: bold;
+}
+
+Sidebar ListItem > Label {
+    background: transparent;
+}
+
+/* ==========================================================================
+   SONG LIST (Right Column)
+   ========================================================================== */
+SongList {
+    layout: vertical;
+    width: 1fr;
+    height: 100%;
+    padding-bottom: 0;
+    background: $background;
+    background-tint: $primary 5%;
+}
+
+SongList #content-header {
+    height: 6;
+    padding: 1 3;
+    background: transparent;
+    align: left middle;
+}
+
+SongList .view-title {
+    width: 1fr;
+    background: transparent;
+    color: $text;
+    text-style: bold;
+    content-align: left middle;
+}
+
+SongList #play-all-btn {
+    min-width: 15;
+    height: 3;
+    background: $primary;
+    color: $background;
+    text-style: bold;
+    border: none;
+}
+
+SongList #play-all-btn:hover {
+    background: $primary-lighten-1;
+}
+
+/* Song List Items */
+.song-items {
+    height: 1fr;
+    padding: 0 2;
+    background: transparent;
+    border: none;
+}
+
+SongItem {
+    layout: horizontal;
+    height: 3;
+    padding: 1 2;
+    background: transparent;
+}
+
+SongItem:hover {
+    background: $surface-lighten-1;
+}
+
+SongItem.-highlight {
+    background: $surface-lighten-2;
+}
+
+SongItem Horizontal {
+    height: 100%;
+    align: left middle;
+}
+
+/* Song Columns */
+SongItem .song-idx {
+    width: 5%;
+    background: transparent;
+    color: $text-muted;
+    content-align: left middle;
+}
+
+SongItem .song-title {
+    width: 40%;
+    background: transparent;
+    color: $text;
+    text-style: bold;
+    content-align: left middle;
+}
+
+SongItem .song-artist {
+    width: 40%;
+    background: transparent;
+    color: $text-muted;
+    content-align: left middle;
+}
+
+SongItem .song-duration {
+    width: 15%;
+    background: transparent;
+    color: $text-muted;
+    content-align: right middle;
+}
+
+/* ==========================================================================
+   MiniPlayer (Footer section)
+   ========================================================================== */
+MiniPlayer {
+    dock: bottom;
+    layout: horizontal;
+    width: 100%;
+    height: 5;
+    padding: 0 2;
+    background: $background;
+    border-top: solid $surface-lighten-1;
+}
+
+/* Now Playing Info Column */
+MiniPlayer #now-playing {
+    width: 30%;
+    height: 100%;
+    align: left middle;
+}
+
+MiniPlayer #track-art {
+    width: 6;
+    height: 3;
+    margin-right: 2;
+    background: $surface-lighten-1;
+    color: $primary;
+    content-align: center middle;
+}
+
+MiniPlayer #track-info {
+    layout: vertical;
+    height: 100%;
+    align: left middle;
+}
+
+MiniPlayer #track-title {
+    height: 1;
+    background: transparent;
+    color: $text;
+    text-style: bold;
+}
+
+MiniPlayer #track-artist {
+    height: 1;
+    background: transparent;
+    color: $text-muted;
+    text-style: italic;
+}
+
+/* Player Center Controls Column */
+MiniPlayer #player-controls {
+    layout: vertical;
+    width: 40%;
+    height: 100%;
+    align: center middle;
+}
+
+MiniPlayer #control-buttons {
+    width: 100%;
+    height: 3;
+    align: center middle;
+}
+
+MiniPlayer .control-btn {
+    min-width: 10;
+    height: 3;
+    background: transparent;
+    color: $text-muted;
+    border: none;
+}
+
+MiniPlayer .control-btn:hover {
+    background: transparent;
+    color: $text;
+}
+
+MiniPlayer .play-btn {
+    min-width: 5;
+    background: $foreground;       
+    color: $background;
+    text-style: bold;
+}
+
+MiniPlayer .play-btn:hover {
+    background: $primary-lighten-1;
+    color: $background;
+}
+
+/* Progress Timeline */
+MiniPlayer #progress-area {
+    width: 100%;
+    height: 2;
+    align: center middle;
+}
+
+MiniPlayer #time-elapsed,
+MiniPlayer #time-total {
+    width: 5;
+    background: transparent;
+    color: $text-muted;
+    content-align: center middle;
+}
+
+MiniPlayer #progress-bar {
+    width: 1fr;
+    margin: 0 2;
+}
+
+MiniPlayer #progress-bar Bar > .bar--complete { color: $text; }
+MiniPlayer #progress-bar Bar > .bar--bar      { color: $primary; }
+
+/* Right Section (Volume / Extras Column) */
+MiniPlayer #extra-controls {
+    width: 30%;
+    height: 100%;
+    align: right middle;
+}
+
+MiniPlayer #repeat-shuffle {
+    align: right top;
+    width: 100%;
+    height: 50%;
+}
+
+MiniPlayer .icon-btn {
+    min-width: 4;
+    background: transparent;
+    color: $text-muted;
+    border: none;
+}
+
+MiniPlayer .icon-btn:hover {
+    background: transparent;
+    color: $text;
+}
+
+MiniPlayer #volume-area {
+    align: right bottom;
+    width: 100%;
+    height: 50%;
+}
+
+MiniPlayer #volume-icon {
+    width: 3;
+    background: transparent;
+    color: $text-muted;
+    content-align: center middle;
+}
+
+MiniPlayer #volume-bar {
+    width: 1fr;
+    margin-left: 1;
+}
+
+MiniPlayer #volume-bar Bar > .bar--complete { color: $text; }
+MiniPlayer #volume-bar Bar > .bar--bar      { color: $text; }
+
+/* ==========================================================================
+   Utilities
+   ========================================================================== */
+.hidden {
+    display: none;
+}

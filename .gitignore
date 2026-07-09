@@ -1,9 +1,18 @@
-# === Python ===
+# Cache and compiled Python files
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-.Python
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Distribution and packaging
 build/
 develop-eggs/
 dist/
@@ -22,24 +31,52 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-# === Ambientes Virtuais ===
-.venv/
-venv/
-ENV/
-env/
-pip-log.txt
-pip-delete-this-directory.txt
+# Local configuration and secrets files
+.env
+.env.local
+.secret
+*.pot
 
-# === Testes e Cobertura ===
-htmlcov/
-.toml
-.cache
-.pytest_cache/
-.mypy_cache/
+# Database
+data/
+data/player.db
+data/player.db-shm
+data/player.db-wal
+
+# Music files
+*.mp3
+*.flac
+*.ogg
+*.wav
+
+# Testing tools, coverage and code quality
+.htmlcov/
+.tox/
 .nosenv/
 .coverage
 .coverage.*
+.cache
 nosetests.xml
 coverage.xml
 *.cover
 *.py,cover
+.hypothesis/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Code editor settings (Ex: VS Code and PyCharm)
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Extra
+main.py
