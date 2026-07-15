@@ -82,3 +82,11 @@ class MiniPlayer(Horizontal):
     @on(Button.Pressed, "#prev-button")
     def _on_prev_press(self) -> None:
         self.post_message(self.PrevTrack())
+
+    @on(Button.Pressed, "#shuffle-btn")
+    def _on_shuffle_press(self) -> None:
+        self.app.action_toggle_shuffle()
+
+    @on(Button.Pressed, "#repeat-btn")
+    def _on_repeat_press(self) -> None:
+        self.app.action_toggle_repeat()

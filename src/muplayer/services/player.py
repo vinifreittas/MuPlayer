@@ -74,8 +74,8 @@ class MpvBackend(PlayerBackend):
             raise ImportError("mpv library is not installed.")
         import mpv
 
-        self._player = mpv.MPV(video=False, ytdl=True)
-        logger.debug("MPV backend initialized.")
+        self._player = mpv.MPV(video=False, ytdl=False)
+        logger.debug("MPV backend initialized (ytdl=False for better RAM usage).")
 
     @property
     def volume(self) -> int:

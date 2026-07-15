@@ -408,6 +408,11 @@ MiniPlayer .icon-btn:hover {
     color: $text;
 }
 
+MiniPlayer .icon-btn.active {
+    color: $primary;
+    text-style: bold;
+}
+
 MiniPlayer #volume-area {
     align: right bottom;
     width: 100%;
