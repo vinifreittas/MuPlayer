@@ -12,9 +12,9 @@ import typer
 from muplayer import MuPlayer
 
 # Initialize the Typer app
-app = typer.Typer(
+cli = typer.Typer(
     name="muplayer",
-    help="MuPlayer - A modern music player command-line interface.",
+    help="MuPlayer - A lightweight music app for terminal.",
     no_args_is_help=False,  # Run the player if no args are given, rather than showing help
     add_completion=False,
 )
@@ -37,7 +37,7 @@ def check_engines() -> dict[str, str | None]:
     return {"mpv": shutil.which("mpv"), "vlc": shutil.which("vlc")}
 
 
-@app.callback(invoke_without_command=True)
+@cli.callback(invoke_without_command=True)
 def main(ctx: typer.Context) -> None:
     """Default action when muplayer is executed without subcommands."""
     if ctx.invoked_subcommand is None:
@@ -58,13 +58,13 @@ def main(ctx: typer.Context) -> None:
         player.run()
 
 
-@app.command()
+@cli.command()
 def version() -> None:
     """Show the current program version."""
     typer.echo(f"MuPlayer {get_version()}")
 
 
-@app.command()
+@cli.command()
 def update() -> None:
     """Update the program to the latest version."""
     typer.echo("Checking for the latest version on GitHub...")
@@ -77,15 +77,19 @@ def update() -> None:
     try:
         url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
         req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+
         with urllib.request.urlopen(req, timeout=5) as response:
             data = json.loads(response.read().decode("utf-8"))
             latest_ver = data["tag_name"].lstrip("v")
+
     except urllib.error.URLError as e:
         typer.secho(f"Network error: Could not check for updates ({e.reason}).", fg="red")
         raise typer.Exit(code=1) from None
+
     except json.JSONDecodeError:
         typer.secho("Error: Failed to parse update response from GitHub.", fg="red")
         raise typer.Exit(code=1) from None
+
     except Exception as e:
         typer.secho(f"An unexpected error occurred: {e}", fg="red")
         raise typer.Exit(code=1) from None
@@ -100,23 +104,26 @@ def update() -> None:
         return
 
     typer.echo("Updating MuPlayer...")
+
+    git_url = f"git+https://github.com/{GITHUB_REPO}.git"
     try:
         if shutil.which("uv"):
-            typer.echo("Using 'uv tool' to upgrade from GitHub...")
-            subprocess.run(["uv", "tool", "upgrade", "muplayer"], check=True)
+            typer.echo("Using 'uv' to upgrade...")
+            command = ["uv", "pip", "install", "--upgrade", "--python", sys.executable, git_url]
         else:
-            typer.echo("Using 'pip' to upgrade from GitHub...")
-            git_url = f"git+https://github.com/{GITHUB_REPO}.git"
-            subprocess.run([sys.executable, "-m", "pip", "install", "--upgrade", git_url], check=True)
+            typer.echo("Using 'pip' to upgrade...")
+            command = [sys.executable, "-m", "pip", "install", "--upgrade", git_url]
 
+        subprocess.run(command, check=True)
         typer.secho("Successfully updated MuPlayer!", fg="green")
+
     except subprocess.CalledProcessError:
         typer.secho("Update failed. Please run the upgrade command manually.", fg="red")
 
 
-@app.command()
+@cli.command()
 def setup() -> None:
-    """Run the setup wizard to install mpv/vlc engines."""
+    """Run the setup wizard to install mpv/vlc players."""
     typer.secho("\n=== MuPlayer Setup Wizard ===\n", fg="cyan", bold=True)
 
     engines = check_engines()
@@ -239,4 +246,4 @@ def _setup_linux(choice: str) -> None:
 
 
 if __name__ == "__main__":
-    app()
+    cli()

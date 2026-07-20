@@ -31,7 +31,7 @@ dependencies = [
 ]
 
 [project.scripts]
-muplayer = "muplayer.__main__:app"
+muplayer = "muplayer.__main__:cli"
 
 [project.urls]
 Homepage = "https://github.com/vinifreittas/MuPlayer"
