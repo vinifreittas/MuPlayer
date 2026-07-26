@@ -50,13 +50,13 @@ class MuPlayer(App[None]):
     is_shuffling: reactive[bool] = reactive(False)
     is_repeating: reactive[bool] = reactive(False)
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, player_engine: str, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         # Core Infrastructure Dependencies
         self.config_manager = ConfigManager(config_path=DATA_DIR / "config.json")
         self.cache = Cache(cache_dir=DATA_DIR / "cache")
         self.db = DatabaseManager(db_path=DATA_DIR / "app_data.db")
-        self.player_api = PlayerAPI()
+        self.player_api = PlayerAPI(engine=player_engine)
         self.search_api = SearchAPI(cache_client=self.cache)
 
         # Playback State Management

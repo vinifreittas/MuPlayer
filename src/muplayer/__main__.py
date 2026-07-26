@@ -8,6 +8,7 @@ import subprocess
 import sys
 import urllib.error
 import urllib.request
+from ctypes.util import find_library
 
 import typer
 from rich.console import Console
@@ -37,8 +38,8 @@ def get_version() -> str:
 
 
 def check_engines() -> dict[str, str | None]:
-    """Checks if mpv or vlc are installed on the system PATH."""
-    return {"mpv": shutil.which("mpv"), "vlc": shutil.which("vlc")}
+    """Checks if mpv or vlc shared libraries are present on the system."""
+    return {"mpv": find_library("mpv"), "vlc": find_library("vlc")}
 
 
 def get_engine_version(engine_name: str) -> str | None:
@@ -105,7 +106,7 @@ def main(
             engines = check_engines()
             if not engines["mpv"] and not engines["vlc"]:
                 typer.secho(
-                    "\nError: Neither 'mpv' nor 'vlc' was found on your system PATH.\n"
+                    "\nError: Neither 'mpv' nor 'vlc' library was found on your system.\n"
                     "MuPlayer needs one of these engines to play music.\n\n"
                     "Please run: muplayer setup",
                     fg="red",
@@ -126,8 +127,15 @@ def main(
                 )
                 raise typer.Exit(code=1)
 
+            # Resolve engine: prefer mpv, fall back to vlc
+            player_engine = "mpv" if engines["mpv"] else "vlc"
+        else:
+            # --force: still need to pick an engine; default to mpv
+            engines = check_engines()
+            player_engine = "mpv" if engines["mpv"] else "vlc"
+
         try:
-            player = MuPlayer()
+            player = MuPlayer(player_engine=player_engine)
             player.run()
         except KeyboardInterrupt:
             typer.secho("\nMuPlayer session terminated by user.", fg="yellow")

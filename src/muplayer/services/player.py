@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import logging
-import shutil
 from abc import ABC, abstractmethod
+from ctypes.util import find_library
 from types import TracebackType
-from typing import ClassVar
+from typing import Literal
 
 logger = logging.getLogger(__name__)
 
@@ -67,15 +67,13 @@ class MpvBackend(PlayerBackend):
 
     @classmethod
     def is_available(cls) -> bool:
-        return shutil.which("mpv") is not None
+        return find_library("mpv") is not None
 
     def __init__(self) -> None:
-        if not self.is_available():
-            raise ImportError("mpv library is not installed.")
         import mpv
 
         self._player = mpv.MPV(video=False, ytdl=False)
-        logger.debug("MPV backend initialized (ytdl=False for better RAM usage).")
+        logger.debug("MPV backend initialized (ytdl=False for better RAM usage.)")
 
     @property
     def volume(self) -> int:
@@ -105,11 +103,9 @@ class VlcBackend(PlayerBackend):
 
     @classmethod
     def is_available(cls) -> bool:
-        return shutil.which("vlc") is not None
+        return find_library("vlc") is not None
 
     def __init__(self) -> None:
-        if not self.is_available():
-            raise ImportError("python-vlc library is not installed.")
         import vlc
 
         self._instance = vlc.Instance("--no-video --quiet")
@@ -148,33 +144,37 @@ class VlcBackend(PlayerBackend):
 # =====================================================================
 
 
+# Maps engine name strings to their backend classes
+_ENGINE_MAP: dict[str, type[PlayerBackend]] = {
+    "mpv": MpvBackend,
+    "vlc": VlcBackend,
+}
+
+
 class PlayerAPI:
     """Handles core audio playback features using a standard PlayerBackend interface."""
 
-    # Priority registry order for backends
-    _BACKEND_REGISTRY: ClassVar[list[type[PlayerBackend]]] = [MpvBackend, VlcBackend]
-
-    def __init__(self) -> None:
+    def __init__(self, engine: Literal["mpv", "vlc"]) -> None:
+        self._engine = engine
         self._player: PlayerBackend | None = None
-        logger.debug("PlayerAPI wrapper instantiated (lazy loading active).")
+        logger.debug(f"PlayerAPI wrapper instantiated with engine='{engine}' (lazy loading active).")
 
     @property
     def player(self) -> PlayerBackend:
-        """Lazy initialization with automatic backend selection."""
+        """Lazy initialization using the engine specified at construction time."""
         if self._player is None:
             self._player = self._init_backend()
         return self._player
 
     def _init_backend(self) -> PlayerBackend:
-        """Dynamically discovers and loads the first available backend from registry."""
-        for backend_cls in self._BACKEND_REGISTRY:
-            if backend_cls.is_available():
-                try:
-                    return backend_cls()
-                except Exception as e:
-                    logger.warning(f"{backend_cls.__name__} was available but failed to initialize: {e}")
-
-        raise RuntimeError("Neither MPV nor VLC media backends are available or working.")
+        """Instantiates the backend for the engine received from the caller."""
+        backend_cls = _ENGINE_MAP.get(self._engine)
+        if backend_cls is None:
+            raise ValueError(f"Unknown audio engine: '{self._engine}'. Valid options: {list(_ENGINE_MAP)}.")
+        try:
+            return backend_cls()
+        except Exception as e:
+            raise RuntimeError(f"Failed to initialize '{self._engine}' backend: {e}") from e
 
     @property
     def volume(self) -> int:
