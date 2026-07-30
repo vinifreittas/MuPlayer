@@ -2,16 +2,16 @@ import json
 import logging
 from pathlib import Path
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
 
 class AppConfig(BaseModel):
-    language: str = "en"
+    language: str = Field(default="en", pattern="^(en|pt)$")
     efficiency_mode: bool = False
-    search_limit: int = 15
-    volume: int = 80
+    search_limit: int = Field(default=15, ge=1, le=50)
+    volume: int = Field(default=80, ge=0, le=100)
 
 
 class ConfigManager:
@@ -42,7 +42,11 @@ class ConfigManager:
         return self.config
 
     def update(self, **kwargs) -> None:
-        for key, value in kwargs.items():
-            if hasattr(self.config, key):
-                setattr(self.config, key, value)
-        self.save()
+        """Update configuration fields safely, validating against AppConfig schema."""
+        try:
+            current_data = self.config.model_dump()
+            current_data.update(kwargs)
+            self.config = AppConfig.model_validate(current_data)
+            self.save()
+        except Exception as e:
+            logger.error(f"Failed to update config with kwargs {kwargs}: {e}")

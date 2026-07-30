@@ -7,6 +7,7 @@ from textual.widgets import Button, Label, ProgressBar
 
 from muplayer.interface.helpers import format_time
 from muplayer.models import Song
+from muplayer.utils.i18n import t
 
 
 class MiniPlayer(Horizontal):
@@ -25,6 +26,12 @@ class MiniPlayer(Horizontal):
 
     class PrevTrack(Message):
         """Event to request the previous track."""
+
+    class ToggleShuffle(Message):
+        """DT-11: Fired when the shuffle button is pressed. Replaces direct app.action_* call."""
+
+    class ToggleRepeat(Message):
+        """DT-11: Fired when the repeat button is pressed. Replaces direct app.action_* call."""
 
     def compose(self) -> ComposeResult:
         with Horizontal(id="now-playing"):
@@ -51,12 +58,20 @@ class MiniPlayer(Horizontal):
                 yield Button("🔁", id="repeat-btn", classes="icon-btn")
                 yield Button("🔀", id="shuffle-btn", classes="icon-btn")
 
+    def update_translations(self) -> None:
+        """Update fallback track title when language changes if no song is playing."""
+        if self.current_song is None:
+            self.watch_current_song(None)
+
     def watch_current_song(self, current_song: Song | None) -> None:
-        song_data = current_song or Song(title="No track playing", artist="", album="", duration=0)
+        song_data = current_song or Song(title=t("no_track_playing"), artist="", album="", duration=0)
 
         self.query_one("#track-title", Label).update(song_data.title)
         self.query_one("#track-artist", Label).update(song_data.artist)
         self.query_one("#time-total", Label).update(format_time(song_data.duration))
+        # Setting time_elapsed to 0 automatically triggers watch_time_elapsed(0),
+        # which resets both the time label and the progress bar — no manual update needed.
+        self.time_elapsed = 0
 
     def watch_is_playing(self, is_playing: bool) -> None:
         self.query_one("#play-button", Button).label = "⏸" if is_playing else "▶"
@@ -85,8 +100,10 @@ class MiniPlayer(Horizontal):
 
     @on(Button.Pressed, "#shuffle-btn")
     def _on_shuffle_press(self) -> None:
-        self.app.action_toggle_shuffle()
+        """DT-11: Post message instead of calling self.app.action_toggle_shuffle() directly."""
+        self.post_message(self.ToggleShuffle())
 
     @on(Button.Pressed, "#repeat-btn")
     def _on_repeat_press(self) -> None:
-        self.app.action_toggle_repeat()
+        """DT-11: Post message instead of calling self.app.action_toggle_repeat() directly."""
+        self.post_message(self.ToggleRepeat())

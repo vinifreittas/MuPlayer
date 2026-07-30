@@ -52,6 +52,11 @@ class PlayerBackend(ABC):
         pass
 
     @abstractmethod
+    def get_time(self) -> int:
+        """Return the current playback position in whole seconds. Returns 0 if unknown."""
+        pass
+
+    @abstractmethod
     def terminate(self) -> None:
         """Safely release and close player resources."""
         pass
@@ -94,6 +99,14 @@ class MpvBackend(PlayerBackend):
     def play(self, source: str) -> None:
         self._player.play(source)
 
+    def get_time(self) -> int:
+        """Returns current playback position in seconds via MPV's time_pos property."""
+        try:
+            pos = self._player.time_pos
+            return int(pos) if pos is not None else 0
+        except Exception:
+            return 0
+
     def terminate(self) -> None:
         self._player.terminate()
 
@@ -134,9 +147,24 @@ class VlcBackend(PlayerBackend):
         self._player.set_mrl(source)
         self._player.play()
 
+    def get_time(self) -> int:
+        """Returns current playback position in seconds via VLC's get_time() (ms → s)."""
+        try:
+            ms = self._player.get_time()
+            return max(0, ms // 1000) if ms is not None and ms >= 0 else 0
+        except Exception:
+            return 0
+
     def terminate(self) -> None:
-        self._player.stop()
-        self._player.release()
+        """DT-02: Release both the media player AND the vlc.Instance to free all native memory."""
+        if self._player:
+            self._player.stop()
+            self._player.release()
+            self._player = None
+        if self._instance:
+            self._instance.release()
+            self._instance = None
+        logger.debug("VLC backend fully released (player + instance).")
 
 
 # =====================================================================
@@ -207,6 +235,12 @@ class PlayerAPI:
         except Exception as e:
             logger.error(f"Player error while trying to play: {e}", exc_info=True)
             return False
+
+    def get_time(self) -> int:
+        """Returns the current playback position in seconds from the audio engine (DT-33)."""
+        if self._player is None:
+            return 0
+        return self._player.get_time()
 
     def pause(self) -> None:
         logger.info("Pausing player.")

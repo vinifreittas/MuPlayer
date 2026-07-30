@@ -1,12 +1,16 @@
-from textual import on
+import contextlib
+
+from textual import events, on
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
+from textual.css.query import NoMatches
 from textual.message import Message
 from textual.reactive import reactive
 from textual.widgets import Button, Label, ListItem, ListView
 
 from muplayer.interface.helpers import format_time
 from muplayer.models import Song
+from muplayer.utils.i18n import t
 
 
 class SongItem(ListItem):
@@ -16,6 +20,12 @@ class SongItem(ListItem):
         super().__init__(**kwargs)
         self.song_idx = idx
         self.song = song
+
+    def on_enter(self, event: events.Enter) -> None:
+        self.add_class("-hover")
+
+    def on_leave(self, event: events.Leave) -> None:
+        self.remove_class("-hover")
 
     def compose(self) -> ComposeResult:
         with Horizontal():
@@ -70,10 +80,16 @@ class SongList(Vertical):
 
     def compose(self) -> ComposeResult:
         with Horizontal(id="content-header"):
-            yield Label("Songs", classes="view-title")
-            yield Button("▶ Play All", variant="primary", id="play-all-btn")
+            yield Label(t("songs_title"), id="songs-header-title", classes="view-title")
+            yield Button(t("play_all_btn"), variant="primary", id="play-all-btn")
 
         yield ListView(id="song-playlist", classes="song-items")
+
+    def update_translations(self) -> None:
+        """Update static label texts to match current locale."""
+        with contextlib.suppress(NoMatches):
+            self.query_one("#songs-header-title", Label).update(t("songs_title"))
+            self.query_one("#play-all-btn", Button).label = t("play_all_btn")
 
     def watch_songs(self, songs: list[Song]) -> None:
         song_listview = self.query_one("#song-playlist", ListView)

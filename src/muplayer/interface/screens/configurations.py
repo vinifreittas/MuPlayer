@@ -7,6 +7,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Input, Label, Select, Static, Switch
 
 from muplayer.utils.config import AppConfig
+from muplayer.utils.i18n import t
 
 
 class Configurations(ModalScreen):
@@ -20,11 +21,11 @@ class Configurations(ModalScreen):
         with Vertical(id="container"):
             # A horizontal header container to neatly align the title and the close button
             with Horizontal(id="config-header"):
-                yield Label("Application Settings", id="config-title")
+                yield Label(t("config_title"), id="config-title")
                 yield Static("x", id="config-close-btn")
 
             # 1. Search Limit
-            yield Label("Max Search Results:")
+            yield Label(t("config_search_limit"))
             yield Input(
                 value=str(self.app_config.search_limit),
                 placeholder="e.g., 15",
@@ -33,14 +34,14 @@ class Configurations(ModalScreen):
             )
 
             # 2. Language Selection
-            yield Label("Language / Idioma:")
+            yield Label(t("config_language"))
             yield Select(
                 options=[("English", "en"), ("Português", "pt")], value=self.app_config.language, id="config-language"
             )
 
             # 3. Efficiency Mode Toggle
             with Horizontal(classes="toggle-container"):
-                yield Label("Efficiency Mode:")
+                yield Label(t("config_efficiency_mode"))
                 yield Switch(value=self.app_config.efficiency_mode, id="config-efficiency")
 
     @on(events.Click, "#config-close-btn")

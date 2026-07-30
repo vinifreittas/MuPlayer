@@ -229,7 +229,8 @@ SongItem {
     background: transparent;
 }
 
-SongItem:hover {
+SongItem:hover,
+SongItem.-hover {
     background: $surface-lighten-1;
 }
 

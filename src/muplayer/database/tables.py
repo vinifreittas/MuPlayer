@@ -3,24 +3,25 @@ from tortoise.models import Model
 
 
 class Song(Model):
-    id = fields.IntField(pk=True)
-    title = fields.CharField(max_length=255, index=True)  # Added index for faster search
-    artist = fields.CharField(max_length=255, index=True)  # Added index for faster search
-    album = fields.CharField(max_length=255)
-    duration = fields.IntField()  # Kept as IntField (seconds)
-    source = fields.CharField(max_length=255, null=True)
+    id = fields.IntField(primary_key=True)
+    title = fields.CharField(max_length=255, db_index=True)
+    artist = fields.CharField(max_length=255, db_index=True)
+    album = fields.CharField(max_length=255, default="YouTube Audio")
+    duration = fields.IntField(default=0)
+    source = fields.CharField(max_length=2048, null=True)  # URLs can be long
 
     class Meta:
         table = "songs"
-        unique_together = ("title", "artist", "album", "duration")
+        unique_together = (("title", "artist", "album", "duration"),)
 
     def __str__(self) -> str:
         return f"{self.title} - {self.artist}"
 
 
 class Playlist(Model):
-    id = fields.IntField(pk=True)
+    id = fields.IntField(primary_key=True)
     name = fields.CharField(max_length=255, unique=True)
+    created_at = fields.DatetimeField(auto_now_add=True)
     songs = fields.ManyToManyField("models.Song", through="playlist_songs", related_name="playlists")
 
     class Meta:
@@ -31,7 +32,7 @@ class Playlist(Model):
 
 
 class PlaylistSong(Model):
-    id = fields.IntField(pk=True)
+    id = fields.IntField(primary_key=True)
     playlist = fields.ForeignKeyField("models.Playlist", on_delete=fields.CASCADE)
     song = fields.ForeignKeyField("models.Song", on_delete=fields.CASCADE)
 
@@ -40,7 +41,6 @@ class PlaylistSong(Model):
 
     class Meta:
         table = "playlist_songs"
-        unique_together = (("playlist", "order"),)
         ordering = ("order",)
 
     def __str__(self) -> str:

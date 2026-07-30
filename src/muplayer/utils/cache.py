@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from types import TracebackType
 from typing import Any
 
 import diskcache
@@ -36,7 +37,7 @@ class Cache:
         """Clear all items from the cache. Returns the number of items removed."""
         return self.cache.clear()
 
-    def close(self):
+    def close(self) -> None:
         """Close the underlying SQLite database connection safely."""
         self.cache.close()
         logger.debug("Cache closed successfully.")
@@ -44,3 +45,16 @@ class Cache:
     def __contains__(self, key: str) -> bool:
         """Allows syntax like: if 'key' in cache:"""
         return self.exists(key)
+
+    def __enter__(self) -> "Cache":
+        """Support usage as a context manager: with Cache(...) as cache:"""
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        """Ensures the cache is closed even if an exception occurs."""
+        self.close()

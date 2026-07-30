@@ -23,7 +23,7 @@ def configure_logging(log_dir: Path) -> logging.Logger:
                 old_log.unlink()
 
     # 2. Generate current date filename (resolved to absolute path)
-    date_str = datetime.now().strftime("%Y-%m-%d_%H:%M")
+    date_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     log_file = (log_dir / f"app-{date_str}.log").resolve()
 
     root_logger = logging.getLogger()

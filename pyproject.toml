@@ -27,11 +27,13 @@ dependencies = [
     "quickjs",
     "diskcache",
     "typer",
-    "pydantic"
+    "pydantic",
+    "platformdirs",
+    "packaging",
 ]
 
 [project.scripts]
-muplayer = "muplayer.__main__:cli"
+muplayer = "muplayer.cli:cli"
 
 [project.urls]
 Homepage = "https://github.com/vinifreittas/MuPlayer"
@@ -41,6 +43,10 @@ Bug-Tracker = "https://github.com/vinifreittas/MuPlayer/issues"
 dev = [
     "pre-commit>=4.6.0",
     "ruff>=0.15.20",
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=5.0.0",
+    "deadcode>=2.4.1",
 ]
 
 # --- Hatch Configuration ---
@@ -81,3 +87,12 @@ ignore = [
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
+
+# --- Pytest Configuration ---
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
