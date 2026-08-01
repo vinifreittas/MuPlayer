@@ -3,6 +3,7 @@ import shutil
 import subprocess
 
 import typer
+
 from muplayer.cli.utils import check_engines
 
 app = typer.Typer()

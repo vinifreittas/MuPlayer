@@ -3,12 +3,12 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-from muplayer.database.tables import Playlist as PlaylistsTable
-from muplayer.database.tables import PlaylistSong as PlaylistSongTable
-from muplayer.database.tables import Song as SongsTable
 from tortoise import Tortoise
 from tortoise.transactions import in_transaction
 
+from muplayer.database.tables import Playlist as PlaylistsTable
+from muplayer.database.tables import PlaylistSong as PlaylistSongTable
+from muplayer.database.tables import Song as SongsTable
 from muplayer.domain import Playlist, Song
 
 logger = logging.getLogger(__name__)

@@ -11,6 +11,9 @@ app = typer.Typer()
 @app.command("doctor")
 def doctor_cmd() -> None:
     """Run system diagnostics and display environment details."""
+    from rich.console import Console
+    from rich.table import Table
+
     from muplayer.cli.utils import (
         check_engines,
         check_terminal_support,
@@ -18,8 +21,6 @@ def doctor_cmd() -> None:
         get_version,
     )
     from muplayer.utils.paths import get_cache_dir, get_data_dir, get_log_dir
-    from rich.console import Console
-    from rich.table import Table
 
     console = Console()
     console.print("\n[bold cyan]=== MuPlayer System Doctor ===[/bold cyan]\n")

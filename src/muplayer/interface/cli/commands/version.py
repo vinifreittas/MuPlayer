@@ -1,4 +1,5 @@
 import typer
+
 from muplayer.cli.utils import get_version
 
 app = typer.Typer()

@@ -1,6 +1,5 @@
 import contextlib
 
-from muplayer.utils.i18n import t
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Vertical
@@ -8,6 +7,8 @@ from textual.css.query import NoMatches
 from textual.message import Message
 from textual.reactive import reactive
 from textual.widgets import Label, ListItem, ListView
+
+from muplayer.utils.i18n import t
 
 
 class Sidebar(Vertical):

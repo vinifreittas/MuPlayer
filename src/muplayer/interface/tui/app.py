@@ -3,14 +3,6 @@ import inspect
 import logging
 from typing import Any, ClassVar
 
-from muplayer.database import DatabaseManager
-from muplayer.interface.screens import Configurations, SelectPlaylistModal
-from muplayer.interface.themes import spotify_dark_theme
-from muplayer.interface.widgets import Header, MiniPlayer, SearchView, Sidebar, SongList
-from muplayer.services import PlayerAPI, SearchAPI
-from muplayer.utils import Cache, configure_logging, set_locale, t
-from muplayer.utils.config import ConfigManager
-from muplayer.utils.paths import get_cache_dir, get_data_dir, get_log_dir
 from textual import on, work
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal
@@ -18,7 +10,15 @@ from textual.css.query import NoMatches
 from textual.reactive import reactive
 from textual.widgets import Button, ContentSwitcher
 
+from muplayer.database import DatabaseManager
 from muplayer.domain import Song
+from muplayer.interface.screens import Configurations, SelectPlaylistModal
+from muplayer.interface.themes import spotify_dark_theme
+from muplayer.interface.widgets import Header, MiniPlayer, SearchView, Sidebar, SongList
+from muplayer.services import PlayerAPI, SearchAPI
+from muplayer.utils import Cache, configure_logging, set_locale, t
+from muplayer.utils.config import ConfigManager
+from muplayer.utils.paths import get_cache_dir, get_data_dir, get_log_dir
 
 logger = logging.getLogger(__name__)
 

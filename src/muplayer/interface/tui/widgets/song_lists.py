@@ -1,7 +1,5 @@
 import contextlib
 
-from muplayer.interface.helpers import format_time
-from muplayer.utils.i18n import t
 from textual import events, on
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
@@ -11,6 +9,8 @@ from textual.reactive import reactive
 from textual.widgets import Button, Label, ListItem, ListView
 
 from muplayer.domain import Song
+from muplayer.interface.helpers import format_time
+from muplayer.utils.i18n import t
 
 
 class SongItem(ListItem):

@@ -9,13 +9,14 @@ Behaviour:
 
 from typing import ClassVar
 
-from muplayer.domain.playlist import Playlist
-from muplayer.utils.i18n import t
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Label, ListItem, ListView, Static
+
+from muplayer.domain.playlist import Playlist
+from muplayer.utils.i18n import t
 
 
 class SelectPlaylistModal(ModalScreen[str | None]):

@@ -6,9 +6,9 @@ import urllib.error
 import urllib.request
 
 import typer
-from muplayer.cli.utils import get_version
 
 from muplayer import __github_repo__
+from muplayer.cli.utils import get_version
 
 USER_AGENT = "MuPlayerUpdateChecker/1.0"
 GITHUB_REPO = __github_repo__
@@ -19,8 +19,9 @@ app = typer.Typer()
 @app.command("update")
 def update_cmd() -> None:
     """Update the program to the latest version."""
-    from muplayer.utils import t
     from packaging.version import parse as parse_version
+
+    from muplayer.utils import t
 
     typer.echo("Checking for the latest version on GitHub...")
     current_ver = get_version()
