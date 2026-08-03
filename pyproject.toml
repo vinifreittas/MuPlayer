@@ -41,12 +41,12 @@ Bug-Tracker = "https://github.com/vinifreittas/MuPlayer/issues"
 
 [dependency-groups]
 dev = [
-    "pre-commit>=4.6.0",
-    "ruff>=0.15.20",
-    "pytest>=8.0.0",
-    "pytest-asyncio>=0.23.0",
-    "pytest-cov>=5.0.0",
-    "deadcode>=2.4.1",
+    "pre-commit",
+    "ruff",
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+    "deadcode",
 ]
 
 # --- Hatch Configuration ---

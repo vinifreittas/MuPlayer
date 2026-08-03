@@ -1,5 +1,4 @@
-from .playlist import Playlist
-from .song import Song
+from .models import Playlist, Song
 
 __all__ = [
     "Playlist",

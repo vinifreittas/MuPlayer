@@ -9,7 +9,7 @@ from textual.logging import TextualHandler
 LOG_BACKUPS = int(os.getenv("APP_LOG_BACKUPS", "5"))
 
 
-def configure_logging(log_dir: Path) -> logging.Logger:
+def setup_logging(log_dir: Path, log_level: int = logging.INFO) -> logging.Logger:
     """Configures daily date-based log files and caps the total log count."""
     log_dir.mkdir(parents=True, exist_ok=True)
 
@@ -27,7 +27,7 @@ def configure_logging(log_dir: Path) -> logging.Logger:
     log_file = (log_dir / f"app-{date_str}.log").resolve()
 
     root_logger = logging.getLogger()
-    root_logger.setLevel(logging.DEBUG)
+    root_logger.setLevel(log_level)
 
     # 3. Textual UI Handler Idempotency
     if not any(isinstance(h, TextualHandler) for h in root_logger.handlers):
