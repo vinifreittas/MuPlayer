@@ -1,6 +1,6 @@
 import typer
 
-from muplayer.cli.utils import get_version
+from muplayer.infrastructure.system import get_version
 
 app = typer.Typer()
 

@@ -8,7 +8,7 @@ from textual.message import Message
 from textual.reactive import reactive
 from textual.widgets import Label, ListItem, ListView
 
-from muplayer.utils.i18n import t
+from muplayer.infrastructure.i18n import t
 
 
 class Sidebar(Vertical):

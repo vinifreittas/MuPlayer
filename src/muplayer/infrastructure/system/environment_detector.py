@@ -38,8 +38,7 @@ def get_engine_version(engine_name: str) -> str | None:
 
 
 def check_terminal_support() -> tuple[bool, str | None]:
-    """Checks if the terminal environment supports running the Textual TUI"""
-    # Lazy import do Rich Console
+    """Checks if the terminal environment supports running the Textual TUI."""
     from rich.console import Console
 
     console = Console()
@@ -57,3 +56,9 @@ def check_terminal_support() -> tuple[bool, str | None]:
         return False, "Terminal environment does not support color rendering."
 
     return True, None
+
+
+def get_terminal_dimensions() -> tuple[int, int]:
+    """Returns current terminal dimensions as (columns, lines)."""
+    cols, lines = shutil.get_terminal_size()
+    return cols, lines

@@ -15,8 +15,8 @@ from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Label, ListItem, ListView, Static
 
-from muplayer.domain.playlist import Playlist
-from muplayer.utils.i18n import t
+from muplayer.domain import Playlist
+from muplayer.infrastructure.i18n import t
 
 
 class SelectPlaylistModal(ModalScreen[str | None]):

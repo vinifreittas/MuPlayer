@@ -1,9 +1,19 @@
 import os
 import platform
-import shutil
 import sys
 
 import typer
+
+from muplayer.infrastructure.system import (
+    check_engines,
+    check_terminal_support,
+    get_cache_dir,
+    get_data_dir,
+    get_engine_version,
+    get_log_dir,
+    get_terminal_dimensions,
+    get_version,
+)
 
 app = typer.Typer()
 
@@ -13,14 +23,6 @@ def doctor_cmd() -> None:
     """Run system diagnostics and display environment details."""
     from rich.console import Console
     from rich.table import Table
-
-    from muplayer.cli.utils import (
-        check_engines,
-        check_terminal_support,
-        get_engine_version,
-        get_version,
-    )
-    from muplayer.utils.paths import get_cache_dir, get_data_dir, get_log_dir
 
     console = Console()
     console.print("\n[bold cyan]=== MuPlayer System Doctor ===[/bold cyan]\n")
@@ -50,28 +52,31 @@ def doctor_cmd() -> None:
         "Connected to TTY" if is_stdin_tty else "Not attached to interactive TTY",
     )
 
-    is_stdout_tty = console.is_terminal
+    from rich.console import Console as _Console
+
+    _console = _Console()
+    is_stdout_tty = _console.is_terminal
     term_table.add_row(
         "Terminal Output (stdout)",
         "[green]PASS[/green]" if is_stdout_tty else "[red]FAIL[/red]",
         "Connected to terminal" if is_stdout_tty else "Not attached to terminal",
     )
 
-    is_dumb = console.is_dumb_terminal
+    is_dumb = _console.is_dumb_terminal
     term_table.add_row(
         "Terminal Type",
         "[red]FAIL (Dumb)[/red]" if is_dumb else "[green]PASS[/green]",
         f"TERM={os.getenv('TERM', 'not set')}",
     )
 
-    color_sys = console.color_system
+    color_sys = _console.color_system
     term_table.add_row(
         "Color Support",
         "[green]PASS[/green]" if color_sys else "[red]FAIL[/red]",
         f"Detected: {color_sys}" if color_sys else "No color support detected",
     )
 
-    cols, lines = shutil.get_terminal_size()
+    cols, lines = get_terminal_dimensions()
     term_table.add_row(
         "Terminal Dimensions",
         "[green]INFO[/green]",

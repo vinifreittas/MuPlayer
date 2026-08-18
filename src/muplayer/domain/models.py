@@ -13,6 +13,7 @@ class Song(BaseModel):
     album: str = "YouTube Audio"
     duration: int = Field(default=0, ge=0)
     source: str | None = None
+    added_at: datetime | None = None
 
     @field_validator("duration", mode="before")
     @classmethod

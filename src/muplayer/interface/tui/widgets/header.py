@@ -7,7 +7,7 @@ from textual.css.query import NoMatches
 from textual.message import Message
 from textual.widgets import Input, Label
 
-from muplayer.utils.i18n import t
+from muplayer.infrastructure.i18n import t
 
 
 class Header(Horizontal):

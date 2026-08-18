@@ -1,10 +1,14 @@
+import logging
 import sys
 
 import typer
 
 from muplayer.interface.cli.commands import register_commands
 
-# --- Instância Principal do CLI ---
+logger = logging.getLogger(__name__)
+
+# ----- Instância Principal do CLI -----
+
 cli = typer.Typer(
     name="muplayer",
     help="MuPlayer - A lightweight music app for terminal.",
@@ -15,7 +19,7 @@ cli = typer.Typer(
 register_commands(cli)
 
 
-# --- Helper Functions (Pre-flight Checks) ---
+# ----- Helper Functions (Pre-flight Checks) -----
 
 
 def _resolve_engine(engines: dict) -> str:
@@ -25,7 +29,7 @@ def _resolve_engine(engines: dict) -> str:
 
 def _validate_environment() -> dict:
     """Executa verificações prévias de dependências e suporte a terminal."""
-    from muplayer.interface.cli.utils import check_engines, check_terminal_support
+    from muplayer.infrastructure.system import check_engines, check_terminal_support
 
     engines = check_engines()
     if not engines.get("mpv") and not engines.get("vlc"):
@@ -54,7 +58,7 @@ def _validate_environment() -> dict:
     return engines
 
 
-# --- Callback / Entrypoint CLI ---
+# ----- Callback / Entrypoint CLI -----
 
 
 @cli.callback(invoke_without_command=True)
@@ -75,18 +79,45 @@ def main(
 ) -> None:
     """Default action when muplayer is executed without subcommands."""
     if ctx.invoked_subcommand is None:
+        from muplayer.application.library_service import LibraryService
+        from muplayer.application.playback_service import PlaybackService
+        from muplayer.application.search_service import SearchService
+        from muplayer.infrastructure.audio import PlayerAPI
+        from muplayer.infrastructure.cache import Cache
+        from muplayer.infrastructure.config import ConfigManager
+        from muplayer.infrastructure.database import DatabaseManager
+        from muplayer.infrastructure.i18n import set_locale
         from muplayer.infrastructure.logging import setup_logging
+        from muplayer.infrastructure.search import SearchAPI
+        from muplayer.infrastructure.system import check_engines, get_cache_dir, get_data_dir, get_log_dir
         from muplayer.interface.tui.app import MuPlayer
 
-        setup_logging(debug)
+        log_level = logging.DEBUG if debug else logging.INFO
+        data_dir = get_data_dir()
+        setup_logging(log_dir=get_log_dir(), log_level=log_level)
 
-        if not force:
-            engines = _validate_environment()
-
+        engines = _validate_environment() if not force else check_engines()
         player_engine = _resolve_engine(engines)
 
+        config_manager = ConfigManager(config_path=data_dir / "config.json")
+        set_locale(config_manager.config.language)
+
+        cache = Cache(cache_dir=get_cache_dir())
+        db = DatabaseManager(db_path=data_dir / "app_data.db")
+        player_api = PlayerAPI(engine=player_engine)
+        search_api = SearchAPI()
+
+        search_service = SearchService(search_api=search_api, cache=cache)
+        library_service = LibraryService(db=db)
+        playback_service = PlaybackService(player_api=player_api, search_api=search_api, cache=cache)
+
         try:
-            player = MuPlayer(player_engine=player_engine)
+            player = MuPlayer(
+                playback_service=playback_service,
+                library_service=library_service,
+                search_service=search_service,
+                config_manager=config_manager,
+            )
             player.run()
         except KeyboardInterrupt:
             typer.secho("\nMuPlayer session terminated by user.", fg="yellow")

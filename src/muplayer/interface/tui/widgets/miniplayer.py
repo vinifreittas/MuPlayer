@@ -6,8 +6,8 @@ from textual.reactive import reactive
 from textual.widgets import Button, Label, ProgressBar
 
 from muplayer.domain import Song
-from muplayer.interface.helpers import format_time
-from muplayer.utils.i18n import t
+from muplayer.infrastructure.i18n import t
+from muplayer.interface.tui.helpers import format_time
 
 
 class MiniPlayer(Horizontal):

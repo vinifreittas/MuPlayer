@@ -6,15 +6,16 @@ from typing import Any
 from tortoise import Tortoise
 from tortoise.transactions import in_transaction
 
-from muplayer.database.tables import Playlist as PlaylistsTable
-from muplayer.database.tables import PlaylistSong as PlaylistSongTable
-from muplayer.database.tables import Song as SongsTable
+from muplayer.application.ports import StoragePort
 from muplayer.domain import Playlist, Song
+from muplayer.infrastructure.database.tables import Playlist as PlaylistsTable
+from muplayer.infrastructure.database.tables import PlaylistSong as PlaylistSongTable
+from muplayer.infrastructure.database.tables import Song as SongsTable
 
 logger = logging.getLogger(__name__)
 
 
-class DatabaseManager:
+class DatabaseManager(StoragePort):
     """Acts as a Data Access Layer (DAL) API for the application, managing Tortoise ORM operations."""
 
     def __init__(self, db_path: Path):
@@ -27,7 +28,7 @@ class DatabaseManager:
             "connections": {"default": f"sqlite://{self.db_path.resolve()}"},
             "apps": {
                 "models": {
-                    "models": ["muplayer.database.tables"],
+                    "models": ["muplayer.infrastructure.database.tables"],
                     "default_connection": "default",
                 }
             },
@@ -70,7 +71,8 @@ class DatabaseManager:
 
         grouped_songs: dict[int, list[Song]] = defaultdict(list)
         for ps in playlist_songs:
-            grouped_songs[ps.playlist_id].append(Song.model_validate(ps.song, from_attributes=True))
+            song = Song.model_validate(ps.song, from_attributes=True)
+            grouped_songs[ps.playlist_id].append(song.model_copy(update={"added_at": ps.added_at}))
 
         result = []
         for p in playlists_db:
@@ -91,7 +93,10 @@ class DatabaseManager:
             return None
 
         playlist_songs = await PlaylistSongTable.filter(playlist=playlist_db).order_by("order").prefetch_related("song")
-        songs = [Song.model_validate(ps.song, from_attributes=True) for ps in playlist_songs]
+        songs = [
+            Song.model_validate(ps.song, from_attributes=True).model_copy(update={"added_at": ps.added_at})
+            for ps in playlist_songs
+        ]
 
         return Playlist(id=playlist_db.id, name=playlist_db.name, created_at=playlist_db.created_at, songs=songs)
 
@@ -172,46 +177,4 @@ class DatabaseManager:
                 await ps.save(update_fields=["order"])
 
         logger.info(f"Song at index {song_index} removed from playlist '{playlist_name}'. Positions compacted.")
-        return True
-
-    async def reorder_playlist_song(self, playlist_name: str, old_index: int, new_index: int) -> bool:
-        """Moves a song from old_index to new_index within a playlist. (DT-08)"""
-        playlist_db = await PlaylistsTable.filter(name=playlist_name).first()
-        if not playlist_db:
-            return False
-
-        if old_index == new_index:
-            return True
-
-        entry = await PlaylistSongTable.filter(playlist=playlist_db, order=old_index).first()
-        if not entry:
-            logger.warning(f"No song at index {old_index} in playlist '{playlist_name}'.")
-            return False
-
-        async with in_transaction():
-            # Temporarily set to a sentinel value to avoid conflicts
-            entry.order = -1
-            await entry.save(update_fields=["order"])
-
-            if old_index < new_index:
-                # Moving down: shift items between old+1 and new_index up by 1
-                affected = await PlaylistSongTable.filter(
-                    playlist=playlist_db, order__gt=old_index, order__lte=new_index
-                ).order_by("order")
-                for ps in affected:
-                    ps.order -= 1
-                    await ps.save(update_fields=["order"])
-            else:
-                # Moving up: shift items between new_index and old-1 down by 1
-                affected = await PlaylistSongTable.filter(
-                    playlist=playlist_db, order__gte=new_index, order__lt=old_index
-                ).order_by("-order")
-                for ps in affected:
-                    ps.order += 1
-                    await ps.save(update_fields=["order"])
-
-            entry.order = new_index
-            await entry.save(update_fields=["order"])
-
-        logger.info(f"Song moved from index {old_index} to {new_index} in playlist '{playlist_name}'.")
         return True

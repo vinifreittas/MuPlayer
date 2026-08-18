@@ -4,6 +4,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
+from muplayer.application.ports import ConfigPort
+
 logger = logging.getLogger(__name__)
 
 
@@ -14,7 +16,7 @@ class AppConfig(BaseModel):
     volume: int = Field(default=80, ge=0, le=100)
 
 
-class ConfigManager:
+class ConfigManager(ConfigPort):
     def __init__(self, config_path: Path):
         self.config_path = config_path
         self.config = self.load()
