@@ -12,8 +12,8 @@ class SearchPort(ABC):
         ...
 
     @abstractmethod
-    def extract_audio_url(self, video_url: str) -> tuple[str | None, str | None]:
-        """Extract a direct audio stream URL and HTTP User-Agent from a video URL."""
+    def extract_audio_url(self, video_url: str) -> str | None:
+        """Extract a direct audio stream URL from a video URL."""
         ...
 
     @abstractmethod

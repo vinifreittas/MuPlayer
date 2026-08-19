@@ -24,12 +24,12 @@ dependencies = [
     "python-mpv",
     "python-vlc",
     "tortoise-orm",
-    "quickjs",
     "diskcache",
     "typer",
     "pydantic",
     "platformdirs",
     "packaging",
+    "installed-browsers",
 ]
 
 [project.scripts]

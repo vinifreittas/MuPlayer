@@ -31,6 +31,10 @@ class SearchService:
 
         return results
 
+    def extract_audio_url(self, video_url: str) -> str | None:
+        """Extrai a URL direta do fluxo de áudio de um vídeo."""
+        return self.search_api.extract_audio_url(video_url)
+
     def close(self) -> None:
         """Encerra recursos de busca e cache."""
         self.search_api.close()

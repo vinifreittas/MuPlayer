@@ -17,12 +17,13 @@ class PlaybackService:
         self.cache = cache
         self._queue = QueueState()
         self._is_playing: bool = False
+        self._is_loading: bool = False
         self._is_shuffling: bool = False
         self._is_repeating: bool = False
         self._current_time: int = 0
 
     # ------------------------------------------------------------------
-    # Propriedades de conveniência (mantidas para compatibilidade com app.py)
+    # Propriedades de conveniência
     # ------------------------------------------------------------------
 
     @property
@@ -40,6 +41,10 @@ class PlaybackService:
     @is_playing.setter
     def is_playing(self, value: bool) -> None:
         self._is_playing = value
+
+    @property
+    def is_loading(self) -> bool:
+        return self._is_loading
 
     @property
     def current_time(self) -> int:
@@ -80,8 +85,13 @@ class PlaybackService:
     def select_track(self, index: int) -> Song | None:
         """Valida e define a faixa ativa no índice especificado."""
         if not self._queue.songs or not (0 <= index < len(self._queue.songs)):
-            self._is_playing = False
+            self.pause()
+            self._is_loading = False
             return None
+
+        self.player_api.pause()
+        self._is_playing = False
+        self._is_loading = True
 
         self._queue.current_index = index
         self._queue.active_song = self._queue.songs[index]
@@ -92,24 +102,22 @@ class PlaybackService:
     # Playback & Stream Resolution
     # ------------------------------------------------------------------
 
-    def extract_audio_url(self, url: str) -> tuple[str, str | None]:
-        """Extrai URL direta de reprodução e User-Agent com gerenciamento de cache."""
+    def extract_audio_url(self, url: str) -> str:
+        """Extrai URL direta de reprodução com gerenciamento de cache."""
         cache_key = f"yt:audio_url:{url}"
 
         if self.cache and self.cache.exists(cache_key):
-            cached_data = self.cache.get(cache_key)
-            if isinstance(cached_data, (tuple, list)) and len(cached_data) == 2:
-                cached_url, cached_ua = cached_data
-                if cached_url:
-                    logger.debug(f"Cache hit for audio URL: '{url}'")
-                    return cached_url, cached_ua
+            cached_url = self.cache.get(cache_key)
+            if cached_url and isinstance(cached_url, str):
+                logger.debug(f"Cache hit for audio URL: '{url}'")
+                return cached_url
 
-        audio_url, user_agent = self.search_api.extract_audio_url(url)
+        audio_url = self.search_api.extract_audio_url(url)
 
         if audio_url and self.cache:
-            self.cache.set(cache_key, (audio_url, user_agent), expire=3600)  # 1 hora TTL
+            self.cache.set(cache_key, audio_url, expire=3600)  # 1 hora TTL
 
-        return (audio_url or url, user_agent)
+        return audio_url or url
 
     def invalidate_audio_cache(self, url: str) -> None:
         """Invalida a entrada em cache para uma URL de áudio com falha de reprodução."""
@@ -119,25 +127,30 @@ class PlaybackService:
             logger.debug(f"Invalidated cached audio URL for: '{url}'")
 
     def prepare_and_play_active(self) -> str:
-        """Extrai a URL e inicia o player. Deve ser executado em thread separada.
-
-        Retorna a URL final ou levanta exceção em caso de falha.
-        """
+        """Extrai a URL e inicia o player. Deve ser executado em thread separada."""
         if not self._queue.active_song or not self._queue.active_song.source:
+            self._is_loading = False
             raise ValueError("playback_missing_url")
 
         url = self._queue.active_song.source
-        audio_url, user_agent = self.extract_audio_url(url)
 
-        if self.player_api.play(audio_url, user_agent=user_agent):
-            self._is_playing = True
-            return audio_url
-        else:
-            self.invalidate_audio_cache(url)
-            self._is_playing = False
-            raise RuntimeError("playback_engine_error")
+        try:
+            audio_url = self.extract_audio_url(url)
+
+            if self.player_api.play(audio_url):
+                self._is_playing = True
+                return audio_url
+            else:
+                self.invalidate_audio_cache(url)
+                self._is_playing = False
+                raise RuntimeError("playback_engine_error")
+        finally:
+            self._is_loading = False
 
     def play(self) -> None:
+        if self._is_loading:
+            return
+
         if self._queue.active_song:
             self.player_api.resume()
             self._is_playing = True
@@ -147,6 +160,9 @@ class PlaybackService:
         self._is_playing = False
 
     def toggle_play(self) -> bool:
+        if self._is_loading:
+            return self._is_playing
+
         if self._queue.active_song:
             if self._is_playing:
                 self.pause()
@@ -198,14 +214,11 @@ class PlaybackService:
         return self._queue.current_index - 1
 
     # ------------------------------------------------------------------
-    # Progress (current_time: fallback counter quando player não reporta)
+    # Progress
     # ------------------------------------------------------------------
 
     def update_progress(self) -> tuple[int, bool]:
-        """Atualiza a posição atual de reprodução.
-
-        Retorna (current_time, should_advance_track).
-        """
+        """Atualiza a posição atual de reprodução."""
         if not self._is_playing or not self._queue.active_song:
             return self._current_time, False
 

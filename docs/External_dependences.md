@@ -1,0 +1,3 @@
+- A MPV or VLC binary
+- A quickjs-ng binary
+- A compatible terminal

@@ -32,14 +32,20 @@ class PlaybackMixin(MessagePump):
 
     def _play_track(self, index: int) -> None:
         """Selects track in service and triggers background worker for audio."""
+        # 1. Atualiza a UI para o estado PAUSADO e zera o tempo instantaneamente
+        self.is_playing = False
+        self.current_time = 0
+
+        # 2. Atualiza a fila e a faixa ativa (o service intercala a parada do player)
         song = self.playback_service.select_track(index)
         if not song:
-            self.is_playing = False
             return
 
-        self.current_time = 0
+        # 3. Atualiza as informações da nova música no MiniPlayer mantendo-o pausado
         with contextlib.suppress(NoMatches):
             self.query_one(MiniPlayer).current_song = song
+
+        # 4. Inicia a thread de carregamento/extração em background
         self._start_audio_worker()
 
     @work(thread=True, exclusive=True)
@@ -47,6 +53,7 @@ class PlaybackMixin(MessagePump):
         """Background thread worker for media loading and playback engine ignition."""
         try:
             self.playback_service.prepare_and_play_active()
+            # Sucesso: apenas agora alteramos a UI para "Tocando"
             self.call_from_thread(setattr, self, "is_playing", True)
         except ValueError:
             self.call_from_thread(self.notify, t("playback_missing_url"), severity="error")
@@ -96,6 +103,10 @@ class PlaybackMixin(MessagePump):
     # --------------------------------------------------------------------------
 
     def action_toggle_play(self) -> None:
+        # Se a música estiver em processo de extração/carregamento, ignora a tecla
+        if getattr(self.playback_service, "is_loading", False):
+            return
+
         self.is_playing = self.playback_service.toggle_play()
 
     def action_volume_up(self) -> None:
