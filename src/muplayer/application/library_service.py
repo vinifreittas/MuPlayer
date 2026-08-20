@@ -55,7 +55,8 @@ class LibraryService:
         return False, f"Playlist '{clean_name}' não encontrada ou falha ao remover."
 
     async def add_song_to_playlist(self, playlist_name: str, song: Song) -> tuple[bool, str]:
-        """Adiciona uma música a uma playlist existente ou cria uma nova se não existir.
+        """
+        Adiciona uma música a uma playlist existente ou cria uma nova se não existir.
 
         Retorna (sucesso: bool, mensagem_ou_status: str).
         """
@@ -75,7 +76,11 @@ class LibraryService:
         return False, f"Falha ao adicionar à playlist '{clean_name}'."
 
     async def remove_song_from_playlist(self, playlist_name: str, song_index: int) -> tuple[bool, str]:
-        """Remove a música de determinado índice da playlist."""
+        """
+        Remove a música de determinado índice da playlist.
+
+        Retorna (sucesso: bool, mensagem_ou_status: str).
+        """
         clean_name = playlist_name.strip() if playlist_name else ""
         if not clean_name:
             return False, "Nome de playlist inválido."

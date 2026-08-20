@@ -16,31 +16,60 @@ class Cache:
     def set(self, key: str, value: Any, expire: int | None = None) -> bool:
         """Set a value in the cache."""
         try:
-            return self.cache.set(key, value, expire=expire)
+            result = self.cache.set(key, value, expire=expire)
+            logger.debug(f"Cache set for key '{key}'. Result: {result}")
+            return result
         except Exception as e:
             logger.error(f"Failed to set cache key '{key}': {e}")
             return False
 
     def get(self, key: str, default: Any = None) -> Any:
         """Retrieve a value from the cache. Returns default if key does not exist."""
-        return self.cache.get(key, default=default)
+        try:
+            result = self.cache.get(key, default=default)
+            logger.debug(f"Cache get for key '{key}'. Result: {result}")
+            return result
+        except Exception as e:
+            logger.error(f"Failed to get cache key '{key}': {e}")
+            return default
 
     def exists(self, key: str) -> bool:
         """Check if a key exists in the cache."""
-        return key in self.cache
+        try:
+            result = key in self.cache
+            logger.debug(f"Cache exists for key '{key}'. Result: {result}")
+            return result
+        except Exception as e:
+            logger.error(f"Failed to check cache key '{key}': {e}")
+            return False
 
     def delete(self, key: str) -> bool:
         """Delete a key from the cache. Returns True if the key existed."""
-        return self.cache.delete(key)
+        try:
+            result = self.cache.delete(key)
+            logger.debug(f"Cache delete for key '{key}'. Result: {result}")
+            return result
+        except Exception as e:
+            logger.error(f"Failed to delete cache key '{key}': {e}")
+            return False
 
     def clear(self) -> int:
         """Clear all items from the cache. Returns the number of items removed."""
-        return self.cache.clear()
+        try:
+            result = self.cache.clear()
+            logger.debug(f"Cache cleared. Result: {result}")
+            return result
+        except Exception as e:
+            logger.error(f"Failed to clear cache: {e}")
+            return 0
 
     def close(self) -> None:
         """Close the underlying SQLite database connection safely."""
-        self.cache.close()
-        logger.debug("Cache closed successfully.")
+        try:
+            self.cache.close()
+            logger.debug("Cache closed successfully.")
+        except Exception as e:
+            logger.error(f"Failed to close cache: {e}")
 
     def __contains__(self, key: str) -> bool:
         """Allows syntax like: if 'key' in cache:"""
