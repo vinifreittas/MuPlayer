@@ -235,6 +235,3 @@ class PlaybackService:
             return 0, True
 
         return self._current_time, False
-
-    def close(self) -> None:
-        self.player_api.close()

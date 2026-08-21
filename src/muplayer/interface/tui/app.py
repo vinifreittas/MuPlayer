@@ -1,5 +1,4 @@
 import contextlib
-import inspect
 import logging
 from typing import Any, ClassVar
 
@@ -97,22 +96,3 @@ class MuPlayer(PlaybackMixin, SearchMixin, NavigationMixin, App[None]):
 
         timer_interval = 5.0 if self.config_manager.config.efficiency_mode else 1.0
         self.update_timer = self.set_interval(timer_interval, self._update_playback_progress, pause=True)
-
-    async def on_unmount(self) -> None:
-        """Gracefully cleans up background processes, caches, and connections."""
-        logger.info("Shutting down MuPlayer safely...")
-
-        resources_to_close = [
-            ("Library Service", self.library_service.disconnect),
-            ("Playback Service", self.playback_service.close),
-            ("Search Service", self.search_service.close),
-        ]
-
-        for name, close_func in resources_to_close:
-            try:
-                if inspect.iscoroutinefunction(close_func):
-                    await close_func()
-                else:
-                    close_func()
-            except Exception as e:
-                logger.error(f"Failed to close {name} cleanly: {e}")
