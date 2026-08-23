@@ -14,6 +14,8 @@ async def test_tui_controllers_event_handling():
     config_manager = MagicMock()
 
     playback_service.set_volume.return_value = 50
+    playback_service.is_loading = False
+    playback_service.toggle_play.return_value = True
     config_manager.config.volume = 50
     config_manager.config.language = "en"
     config_manager.config.efficiency_mode = False

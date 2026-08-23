@@ -86,7 +86,7 @@ class SelectPlaylistModal(ModalScreen[str | None]):
                     for playlist in self._playlists:
                         count = playlist.song_count
                         label = f"{playlist.name}  ({count} song{'s' if count != 1 else ''})"
-                        yield ListItem(Label(label), id=f"pl-{playlist.name}")
+                        yield ListItem(Label(label), id=f"pl-{playlist.id}")
             else:
                 yield Label(t("modal_no_playlists"), id="no-playlists-label")
 
@@ -101,8 +101,10 @@ class SelectPlaylistModal(ModalScreen[str | None]):
     def _on_list_selected(self, event: ListView.Selected) -> None:
         """Highlights the clicked playlist and stores its name."""
         if event.item.id:
-            # Strip the "pl-" prefix we added in compose()
-            self._selected_name = event.item.id.removeprefix("pl-")
+            raw_id = event.item.id.removeprefix("pl-")
+            playlist = next((p for p in self._playlists if str(p.id) == raw_id), None)
+            if playlist:
+                self._selected_name = playlist.name
 
     @on(Input.Changed, "#new-playlist-input")
     def _on_input_changed(self, event: Input.Changed) -> None:
