@@ -61,7 +61,12 @@ class MpvBackend(PlayerBackend):
 
     @classmethod
     def is_available(cls) -> bool:
-        return find_library("mpv") is not None
+        try:
+            import mpv  # noqa: F401
+
+            return find_library("mpv") is not None
+        except Exception:
+            return False
 
     def __init__(self) -> None:
         import mpv
@@ -110,7 +115,12 @@ class VlcBackend(PlayerBackend):
 
     @classmethod
     def is_available(cls) -> bool:
-        return find_library("vlc") is not None
+        try:
+            import vlc  # noqa: F401
+
+            return find_library("vlc") is not None
+        except Exception:
+            return False
 
     def __init__(self) -> None:
         import vlc

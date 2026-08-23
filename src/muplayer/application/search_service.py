@@ -1,5 +1,6 @@
 import logging
-from typing import Any
+
+import diskcache
 
 from muplayer.application.ports import SearchPort
 from muplayer.domain import Song
@@ -10,7 +11,7 @@ logger = logging.getLogger(__name__)
 class SearchService:
     """Orquestra buscas de faixas de áudio e gerenciamento de cache de resultados de busca."""
 
-    def __init__(self, search_api: SearchPort, cache: Any = None) -> None:
+    def __init__(self, search_api: SearchPort, cache: diskcache.Cache | None = None) -> None:
         self.search_api = search_api
         self.cache = cache
 
@@ -18,7 +19,7 @@ class SearchService:
         """Executa busca por faixas com consulta prévia ao cache."""
         cache_key = f"yt:search:{query}:{limit}"
 
-        if self.cache and self.cache.exists(cache_key):
+        if self.cache and cache_key in self.cache:
             cached_results = self.cache.get(cache_key)
             if cached_results is not None:
                 logger.debug(f"Cache hit for search query: '{query}'")

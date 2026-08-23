@@ -4,6 +4,11 @@ import subprocess
 import sys
 from ctypes.util import find_library
 
+import installed_browsers
+
+# Supported JS runtimes by yt-dlp, in preferred detection order.
+_JS_RUNTIME_CANDIDATES: list[str] = ["quickjs", "node", "deno", "bun"]
+
 
 def get_version() -> str:
     """Dynamically fetches the installed package version."""
@@ -62,3 +67,45 @@ def get_terminal_dimensions() -> tuple[int, int]:
     """Returns current terminal dimensions as (columns, lines)."""
     cols, lines = shutil.get_terminal_size()
     return cols, lines
+
+
+def get_default_browser() -> str:
+    """Detects the system's default browser for yt-dlp cookie extraction.
+
+    Falls back to 'firefox' if no known browser is detected.
+    """
+    browser_options = [
+        "brave",
+        "chrome",
+        "chromium",
+        "edge",
+        "firefox",
+        "opera",
+        "safari",
+        "vivaldi",
+        "librewolf",
+        "waterfox",
+        "floorp",
+        "whale",
+    ]
+    raw_browser = installed_browsers.what_is_the_default_browser()
+    if raw_browser:
+        name = str(raw_browser).lower()
+        for option in browser_options:
+            if option in name:
+                return option
+    return "firefox"
+
+
+def detect_js_runtime() -> dict[str, dict] | None:
+    """Detects the first available JavaScript runtime on the system PATH.
+
+    Probes candidates in order: node → quickjs → deno → bun.
+    Returns a yt-dlp-compatible ``js_runtimes`` dict, e.g. ``{'node': {}}``,
+    or ``None`` if none is found (yt-dlp will then use its own default).
+    """
+    for runtime in _JS_RUNTIME_CANDIDATES:
+        path = shutil.which(runtime)
+        if path:
+            return {runtime: {}}
+    return None

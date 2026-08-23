@@ -7,8 +7,10 @@ import typer
 from muplayer.infrastructure.system import (
     check_engines,
     check_terminal_support,
+    detect_js_runtime,
     get_cache_dir,
     get_data_dir,
+    get_default_browser,
     get_engine_version,
     get_log_dir,
     get_terminal_dimensions,
@@ -104,7 +106,30 @@ def doctor_cmd() -> None:
     console.print(eng_table)
     console.print()
 
-    # Table 4: Paths & Data
+    # Table 4: Streaming & Extraction Environment
+    js_table = Table(title="Streaming & JS Extractor Environment", show_header=True, header_style="bold magenta")
+    js_table.add_column("Component", style="cyan")
+    js_table.add_column("Status", style="bold")
+    js_table.add_column("Details", style="dim")
+
+    js_runtime = detect_js_runtime()
+    if js_runtime:
+        runtime_name = next(iter(js_runtime.keys()))
+        js_table.add_row("JavaScript Engine", "[green]PASS[/green]", f"Detected active runtime: '{runtime_name}'")
+    else:
+        js_table.add_row(
+            "JavaScript Engine",
+            "[red]FAIL[/red]",
+            "No JS runtime (quickjs, node, deno, bun) found on PATH",
+        )
+
+    default_browser = get_default_browser()
+    js_table.add_row("Default Browser", "[green]INFO[/green]", f"Detected browser for cookies: '{default_browser}'")
+
+    console.print(js_table)
+    console.print()
+
+    # Table 5: Paths & Data
     path_table = Table(title="Data & Storage Paths", show_header=True, header_style="bold magenta")
     path_table.add_column("Item", style="cyan")
     path_table.add_column("Path", style="dim")
@@ -120,13 +145,16 @@ def doctor_cmd() -> None:
     # Summary
     is_term_ok, term_err = check_terminal_support()
     has_engine = bool(engines["mpv"] or engines["vlc"])
+    has_js = js_runtime is not None
 
-    if is_term_ok and has_engine:
+    if is_term_ok and has_engine and has_js:
         console.print("[bold green]✓ Everything looks good! MuPlayer is ready to run.[/bold green]\n")
     else:
         console.print("[bold red]✗ System configuration issue detected:[/bold red]")
         if not has_engine:
             console.print("  - Missing audio engine ('mpv' or 'vlc'). Run: [cyan]muplayer setup[/cyan]")
+        if not has_js:
+            console.print("  - Missing JavaScript runtime ('quickjs', 'node', 'deno', or 'bun'). Please install one.")
         if not is_term_ok:
             console.print(f"  - Terminal issue: {term_err}")
         console.print()

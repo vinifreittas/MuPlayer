@@ -2,7 +2,7 @@ from tortoise import fields
 from tortoise.models import Model
 
 
-class Song(Model):
+class SongTable(Model):
     id = fields.IntField(primary_key=True)
     title = fields.CharField(max_length=255, db_index=True)
     artist = fields.CharField(max_length=255, db_index=True)
@@ -18,11 +18,11 @@ class Song(Model):
         return f"{self.title} - {self.artist}"
 
 
-class Playlist(Model):
+class PlaylistTable(Model):
     id = fields.IntField(primary_key=True)
     name = fields.CharField(max_length=255, unique=True)
     created_at = fields.DatetimeField(auto_now_add=True)
-    songs = fields.ManyToManyField("models.Song", through="playlist_songs", related_name="playlists")
+    songs = fields.ManyToManyField("models.SongTable", through="playlist_songs", related_name="playlists")
 
     class Meta:
         table = "playlists"
@@ -31,10 +31,10 @@ class Playlist(Model):
         return self.name
 
 
-class PlaylistSong(Model):
+class PlaylistSongTable(Model):
     id = fields.IntField(primary_key=True)
-    playlist = fields.ForeignKeyField("models.Playlist", on_delete=fields.CASCADE)
-    song = fields.ForeignKeyField("models.Song", on_delete=fields.CASCADE)
+    playlist = fields.ForeignKeyField("models.PlaylistTable", on_delete=fields.CASCADE)
+    song = fields.ForeignKeyField("models.SongTable", on_delete=fields.CASCADE)
 
     order = fields.IntField()
     added_at = fields.DatetimeField(auto_now_add=True)

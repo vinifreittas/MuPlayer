@@ -1,6 +1,7 @@
 import logging
 import random
-from typing import Any
+
+import diskcache
 
 from muplayer.application.ports import AudioPort, SearchPort
 from muplayer.domain import QueueState, Song
@@ -11,7 +12,7 @@ logger = logging.getLogger(__name__)
 class PlaybackService:
     """Gerencia fila, engine de áudio, resolução de mídia e regras de reprodução."""
 
-    def __init__(self, player_api: AudioPort, search_api: SearchPort, cache: Any = None) -> None:
+    def __init__(self, player_api: AudioPort, search_api: SearchPort, cache: diskcache.Cache | None = None) -> None:
         self.player_api = player_api
         self.search_api = search_api
         self.cache = cache
@@ -106,7 +107,7 @@ class PlaybackService:
         """Extrai URL direta de reprodução com gerenciamento de cache."""
         cache_key = f"yt:audio_url:{url}"
 
-        if self.cache and self.cache.exists(cache_key):
+        if self.cache and cache_key in self.cache:
             cached_url = self.cache.get(cache_key)
             if cached_url and isinstance(cached_url, str):
                 logger.debug(f"Cache hit for audio URL: '{url}'")

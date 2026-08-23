@@ -62,10 +62,9 @@ src/muplayer/
 │   └── ports/                       # Abstract protocols (AudioPort, SearchPort, StoragePort, ConfigPort)
 ├── infrastructure/                  # Infrastructure adapters
 │   ├── audio/                       # Audio engine (PlayerAPI, mpv/vlc backends)
-│   ├── search/                      # Search API (yt-dlp wrapper & stream URL extraction)
-│   ├── database/                    # Tortoise ORM (DatabaseManager, tables.py)
+│   ├── database/                    # Tortoise ORM (DatabaseManager, tables.py, config.py)
 │   ├── system/                      # Environment detector, native engine installer, XDG paths, package updater
-│   ├── cache.py                     # DiskCache wrapper (Cache)
+│   ├── search.py                    # Search API (yt-dlp wrapper & stream URL extraction)
 │   ├── config.py                    # Config file manager (ConfigManager)
 │   ├── i18n.py                      # Multilingual support (t(), set_locale)
 │   └── logging.py                   # Logger setup
@@ -114,7 +113,7 @@ uv run ruff format src/
 uv run pytest
 
 # Detect dead code
-uv run deadcode
+uv run deadcode src
 ```
 
 ---

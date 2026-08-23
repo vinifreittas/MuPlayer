@@ -10,6 +10,7 @@ Directories resolved:
 - Windows: C:\\Users\\<user>\\AppData\\Local\\vinifreittas\\MuPlayer\\
 """
 
+import contextlib
 from pathlib import Path
 
 from platformdirs import user_cache_dir, user_data_dir, user_log_dir
@@ -21,19 +22,22 @@ APP_AUTHOR = "vinifreittas"
 def get_data_dir() -> Path:
     """Returns the platform-appropriate directory for persistent app data (DB, config)."""
     path = Path(user_data_dir(APP_NAME, APP_AUTHOR))
-    path.mkdir(parents=True, exist_ok=True)
+    with contextlib.suppress(OSError):
+        path.mkdir(parents=True, exist_ok=True)
     return path
 
 
 def get_log_dir() -> Path:
     """Returns the platform-appropriate directory for application log files."""
     path = Path(user_log_dir(APP_NAME, APP_AUTHOR))
-    path.mkdir(parents=True, exist_ok=True)
+    with contextlib.suppress(OSError):
+        path.mkdir(parents=True, exist_ok=True)
     return path
 
 
 def get_cache_dir() -> Path:
     """Returns the platform-appropriate directory for disk cache storage."""
     path = Path(user_cache_dir(APP_NAME, APP_AUTHOR))
-    path.mkdir(parents=True, exist_ok=True)
+    with contextlib.suppress(OSError):
+        path.mkdir(parents=True, exist_ok=True)
     return path

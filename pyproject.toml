@@ -24,6 +24,7 @@ dependencies = [
     "python-mpv",
     "python-vlc",
     "tortoise-orm",
+    "aerich",
     "diskcache",
     "typer",
     "pydantic",
@@ -96,3 +97,8 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+
+[tool.aerich]
+tortoise_orm = "muplayer.infrastructure.database.config.TORTOISE_ORM"
+location = "./src/muplayer/infrastructure/database/migrations"
+src_folder = "./src"

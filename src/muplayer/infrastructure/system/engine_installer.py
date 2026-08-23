@@ -26,13 +26,14 @@ def get_package_manager() -> str | None:
 
 
 def install_engine(engine_name: str) -> tuple[bool, str]:
-    """Executes native OS package manager installation for the chosen audio engine ('mpv' or 'vlc').
+    """Executes native OS package manager installation for the chosen engine.
 
+    Supported engines: 'mpv', 'vlc', 'quickjs', 'node', 'nodejs'.
     Returns (success: bool, detail_message: str).
     """
     engine = engine_name.lower().strip()
-    if engine not in ("mpv", "vlc"):
-        return False, f"Invalid engine choice '{engine_name}'. Must be 'mpv' or 'vlc'."
+    if engine not in ("mpv", "vlc", "quickjs", "node", "nodejs"):
+        return False, f"Invalid engine choice '{engine_name}'. Must be 'mpv', 'vlc', 'quickjs', or 'node'."
 
     system = get_detected_os()
 
@@ -51,7 +52,15 @@ def _install_windows(engine: str) -> tuple[bool, str]:
     if not shutil.which("winget"):
         return False, "Windows Package Manager ('winget') was not found on system PATH."
 
-    package_id = "xtse.mpv" if engine == "mpv" else "VideoLAN.VLC"
+    package_ids = {
+        "mpv": "xtse.mpv",
+        "vlc": "VideoLAN.VLC",
+        "node": "OpenJS.NodeJS",
+        "nodejs": "OpenJS.NodeJS",
+        "quickjs": "quickjs",
+    }
+    package_id = package_ids.get(engine, engine)
+
     try:
         res = subprocess.run(["winget", "install", package_id], check=False)
         if res.returncode == 0:
@@ -65,7 +74,13 @@ def _install_macos(engine: str) -> tuple[bool, str]:
     if not shutil.which("brew"):
         return False, "Homebrew ('brew') was not detected on system PATH."
 
-    cmd = ["brew", "install", "mpv"] if engine == "mpv" else ["brew", "install", "--cask", "vlc"]
+    if engine == "vlc":
+        cmd = ["brew", "install", "--cask", "vlc"]
+    elif engine in ("node", "nodejs"):
+        cmd = ["brew", "install", "node"]
+    else:
+        cmd = ["brew", "install", engine]
+
     try:
         res = subprocess.run(cmd, check=False)
         if res.returncode == 0:
@@ -76,13 +91,15 @@ def _install_macos(engine: str) -> tuple[bool, str]:
 
 
 def _install_linux(engine: str) -> tuple[bool, str]:
+    pkg_name = "nodejs" if engine in ("node", "nodejs") else engine
     commands: list[list[str]] = []
+
     if shutil.which("apt-get"):
-        commands = [["sudo", "apt-get", "update"], ["sudo", "apt-get", "install", "-y", engine]]
+        commands = [["sudo", "apt-get", "update"], ["sudo", "apt-get", "install", "-y", pkg_name]]
     elif shutil.which("pacman"):
-        commands = [["sudo", "pacman", "-S", "--noconfirm", engine]]
+        commands = [["sudo", "pacman", "-S", "--noconfirm", pkg_name]]
     elif shutil.which("dnf"):
-        commands = [["sudo", "dnf", "install", "-y", engine]]
+        commands = [["sudo", "dnf", "install", "-y", pkg_name]]
 
     if not commands:
         return False, "Could not identify a supported package manager (apt-get, pacman, dnf)."

@@ -1,3 +1,4 @@
-- A MPV or VLC binary
-- A quickjs-ng binary
+- A player (MPV or VLC)
+- A JavaScript runtime (Quickjs or Node)
 - A compatible terminal
+- A browser

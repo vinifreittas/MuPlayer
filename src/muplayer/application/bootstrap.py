@@ -1,13 +1,13 @@
 import asyncio
 import logging
 
+import diskcache
 import typer
 
 from muplayer.application.library_service import LibraryService
 from muplayer.application.playback_service import PlaybackService
 from muplayer.application.search_service import SearchService
 from muplayer.infrastructure.audio import PlayerAPI
-from muplayer.infrastructure.cache import Cache
 from muplayer.infrastructure.config import ConfigManager
 from muplayer.infrastructure.database import DatabaseManager
 from muplayer.infrastructure.i18n import set_locale
@@ -16,8 +16,10 @@ from muplayer.infrastructure.search import SearchAPI
 from muplayer.infrastructure.system import (
     check_engines,
     check_terminal_support,
+    detect_js_runtime,
     get_cache_dir,
     get_data_dir,
+    get_default_browser,
     get_log_dir,
 )
 from muplayer.interface.tui.app import MuPlayer
@@ -56,6 +58,17 @@ def validate_environment() -> dict[str, bool]:
         )
         raise typer.Exit(code=1)
 
+    if not detect_js_runtime():
+        typer.secho(
+            "\nError: No JavaScript runtime (quickjs, node, deno, or bun) was found on your system PATH.\n"
+            "MuPlayer requires a JavaScript runtime to extract YouTube audio stream URLs via yt-dlp.\n\n"
+            "Please install QuickJS or Node.js on your system.",
+            fg="red",
+            bold=True,
+            err=True,
+        )
+        raise typer.Exit(code=1)
+
     return engines
 
 
@@ -75,13 +88,16 @@ def run_app(debug: bool = False, force: bool = False) -> None:
     player_api: PlayerAPI | None = None
     search_api: SearchAPI | None = None
     db: DatabaseManager | None = None
-    cache: Cache | None = None
+    cache: diskcache.Cache | None = None
 
     try:
-        cache = Cache(cache_dir=get_cache_dir())
+        cache = diskcache.Cache(str(get_cache_dir()))
         db = DatabaseManager(db_path=data_dir / "app_data.db")
         player_api = PlayerAPI(engine=player_engine)
-        search_api = SearchAPI()
+        search_api = SearchAPI(
+            js_runtime=detect_js_runtime(),
+            browser=get_default_browser(),
+        )
 
         search_service = SearchService(search_api=search_api, cache=cache)
         library_service = LibraryService(db=db)

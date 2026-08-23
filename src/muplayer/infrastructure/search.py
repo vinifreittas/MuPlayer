@@ -3,7 +3,6 @@ import time
 import urllib.request
 from typing import Any
 
-import installed_browsers
 import yt_dlp
 
 from muplayer.application.ports import SearchPort
@@ -20,34 +19,6 @@ YTDL_BASE_OPTS: dict[str, Any] = {
     "source_address": "0.0.0.0",
     "skip_download": True,
 }
-
-
-def get_default_browser() -> str:
-    browser_options = [
-        "brave",
-        "chrome",
-        "chromium",
-        "edge",
-        "firefox",
-        "opera",
-        "safari",
-        "vivaldi",
-        "librewolf",
-        "waterfox",
-        "floorp",
-        "whale",
-    ]
-
-    raw_browser = installed_browsers.what_is_the_default_browser()
-
-    if raw_browser:
-        name = str(raw_browser).lower()
-
-        for option in browser_options:
-            if option in name:
-                return option
-
-    return "firefox"
 
 
 def validate_stream_url(url: str, timeout: float = 2.0) -> bool:
@@ -79,7 +50,12 @@ def validate_stream_url(url: str, timeout: float = 2.0) -> bool:
 class SearchAPI(SearchPort):
     """Handles YouTube interactions via persistent yt-dlp instances."""
 
-    def __init__(self, base_opts: dict[str, Any] | None = None) -> None:
+    def __init__(
+        self,
+        js_runtime: dict[str, dict] | None = None,
+        browser: str = "firefox",
+        base_opts: dict[str, Any] | None = None,
+    ) -> None:
         self.base_opts = base_opts or YTDL_BASE_OPTS
 
         search_opts = {
@@ -93,8 +69,8 @@ class SearchAPI(SearchPort):
             "youtube_include_dash_manifest": False,
             "youtube_include_hls_manifest": False,
             "noplaylist": True,
-            "js_runtimes": {"quickjs": {}},
-            "cookiesfrombrowser": (get_default_browser(),),
+            "js_runtimes": js_runtime,
+            "cookiesfrombrowser": (browser,),
             "extractor_args": {
                 "youtube": {
                     "player_client": ["ios", "mweb"],

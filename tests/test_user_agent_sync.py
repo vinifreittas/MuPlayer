@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 from muplayer.application.playback_service import PlaybackService
 from muplayer.domain import Song
 from muplayer.infrastructure.audio.backends import MpvBackend, VlcBackend
-from muplayer.infrastructure.search.search import SearchAPI, validate_stream_url
+from muplayer.infrastructure.search import SearchAPI, validate_stream_url
 
 
 def test_validate_stream_url_success():
@@ -30,14 +30,13 @@ def test_search_api_extract_audio_url_returns_url():
 
     with (
         patch("yt_dlp.YoutubeDL") as mock_ydl_cls,
-        patch("muplayer.infrastructure.search.search.get_default_browser", return_value="firefox"),
-        patch("muplayer.infrastructure.search.search.validate_stream_url", return_value=True),
+        patch("muplayer.infrastructure.search.validate_stream_url", return_value=True),
     ):
         mock_ydl = MagicMock()
         mock_ydl.extract_info.return_value = mock_info
         mock_ydl_cls.return_value = mock_ydl
 
-        search_api = SearchAPI()
+        search_api = SearchAPI(js_runtime={"quickjs": {}}, browser="firefox")
         url = search_api.extract_audio_url("https://youtube.com/watch?v=123")
 
         assert url == "https://googlevideo.com/videoplayback?id=123"

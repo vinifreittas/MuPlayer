@@ -8,9 +8,8 @@ from tortoise.transactions import in_transaction
 
 from muplayer.application.ports import StoragePort
 from muplayer.domain import Playlist, Song
-from muplayer.infrastructure.database.tables import Playlist as PlaylistsTable
-from muplayer.infrastructure.database.tables import PlaylistSong as PlaylistSongTable
-from muplayer.infrastructure.database.tables import Song as SongsTable
+from muplayer.infrastructure.database.config import get_tortoise_config
+from muplayer.infrastructure.database.tables import PlaylistSongTable, PlaylistTable, SongTable
 
 logger = logging.getLogger(__name__)
 
@@ -24,15 +23,7 @@ class DatabaseManager(StoragePort):
 
     def _build_config(self) -> dict[str, Any]:
         """Dynamically generates the Tortoise ORM configuration dictionary."""
-        return {
-            "connections": {"default": f"sqlite://{self.db_path.resolve()}"},
-            "apps": {
-                "models": {
-                    "models": ["muplayer.infrastructure.database.tables"],
-                    "default_connection": "default",
-                }
-            },
-        }
+        return get_tortoise_config(self.db_path)
 
     async def connect(self) -> None:
         """Initializes Tortoise ORM and safely generates database schemas."""
@@ -64,7 +55,7 @@ class DatabaseManager(StoragePort):
 
     async def get_playlists(self, limit: int = 50, offset: int = 0) -> list[Playlist]:
         """Retrieves playlists with pagination support, along with their associated songs. (DT-10)"""
-        playlists_db = await PlaylistsTable.all().offset(offset).limit(limit)
+        playlists_db = await PlaylistTable.all().offset(offset).limit(limit)
 
         # O(1) Query to avoid N+1 problem on startup
         playlist_songs = await PlaylistSongTable.all().order_by("playlist_id", "order").prefetch_related("song")
@@ -88,7 +79,7 @@ class DatabaseManager(StoragePort):
 
     async def get_playlist_by_name(self, name: str) -> Playlist | None:
         """Retrieves a single playlist by its unique name, with songs ordered."""
-        playlist_db = await PlaylistsTable.filter(name=name).first()
+        playlist_db = await PlaylistTable.filter(name=name).first()
         if not playlist_db:
             return None
 
@@ -107,7 +98,7 @@ class DatabaseManager(StoragePort):
     async def create_playlist(self, name: str) -> Playlist | None:
         """Creates a new playlist. Returns None if a playlist with that name already exists. (DT-08)"""
         try:
-            playlist_db = await PlaylistsTable.create(name=name)
+            playlist_db = await PlaylistTable.create(name=name)
             logger.info(f"Playlist '{name}' created with id={playlist_db.id}.")
             return Playlist(id=playlist_db.id, name=playlist_db.name, created_at=playlist_db.created_at)
         except Exception as e:
@@ -116,7 +107,7 @@ class DatabaseManager(StoragePort):
 
     async def delete_playlist(self, name: str) -> bool:
         """Deletes a playlist and all its song associations. Returns True if successful. (DT-08)"""
-        playlist_db = await PlaylistsTable.filter(name=name).first()
+        playlist_db = await PlaylistTable.filter(name=name).first()
         if not playlist_db:
             logger.warning(f"Attempted to delete non-existent playlist: '{name}'")
             return False
@@ -130,12 +121,12 @@ class DatabaseManager(StoragePort):
     async def add_song_to_playlist(self, playlist_name: str, song: Song) -> bool:
         """Adds a song to the end of a playlist. Updates source URL if song already exists. (DT-07)"""
         async with in_transaction():
-            playlist_db = await PlaylistsTable.filter(name=playlist_name).first()
+            playlist_db = await PlaylistTable.filter(name=playlist_name).first()
             if not playlist_db:
                 logger.warning(f"Playlist '{playlist_name}' not found.")
                 return False
 
-            song_db, created = await SongsTable.get_or_create(
+            song_db, created = await SongTable.get_or_create(
                 title=song.title,
                 artist=song.artist,
                 album=song.album,
@@ -158,7 +149,7 @@ class DatabaseManager(StoragePort):
 
     async def remove_song_from_playlist(self, playlist_name: str, song_index: int) -> bool:
         """Removes a song at a given order index and compacts remaining positions. (DT-08)"""
-        playlist_db = await PlaylistsTable.filter(name=playlist_name).first()
+        playlist_db = await PlaylistTable.filter(name=playlist_name).first()
         if not playlist_db:
             logger.warning(f"Playlist '{playlist_name}' not found.")
             return False
