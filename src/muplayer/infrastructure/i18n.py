@@ -8,6 +8,7 @@ Design decisions:
 - `set_locale(language_code)` updates the active locale at runtime.
 """
 
+from functools import lru_cache
 from typing import Any
 
 _TRANSLATIONS: dict[str, dict[str, str]] = {
@@ -106,14 +107,22 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
 }
 
 _active_locale: str = "en"
+_active_strings: dict[str, str] = _TRANSLATIONS["en"]
+
+
+@lru_cache(maxsize=512)
+def _get_raw_translation(key: str, locale: str) -> str:
+    strings = _TRANSLATIONS.get(locale, _TRANSLATIONS["en"])
+    return strings.get(key) or _TRANSLATIONS["en"].get(key) or key
 
 
 def set_locale(language_code: str) -> None:
     """
     Set the active translation locale. Falls back to 'en' for unsupported codes.
     """
-    global _active_locale
+    global _active_locale, _active_strings
     _active_locale = language_code if language_code in _TRANSLATIONS else "en"
+    _active_strings = _TRANSLATIONS[_active_locale]
 
 
 def t(key: str, **kwargs: Any) -> str:
@@ -125,8 +134,7 @@ def t(key: str, **kwargs: Any) -> str:
     - Supports str.format_map for named placeholders, e.g. t("song_added", title="X", playlist="Y").
     - Accepts any value type for interpolation (int, float, str, etc.).
     """
-    locale_strings = _TRANSLATIONS.get(_active_locale, {})
-    raw = locale_strings.get(key) or _TRANSLATIONS["en"].get(key) or key
+    raw = _get_raw_translation(key, _active_locale)
     if kwargs:
         try:
             return raw.format_map(kwargs)

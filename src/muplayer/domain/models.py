@@ -19,7 +19,11 @@ class Song(BaseModel):
     @classmethod
     def validate_duration(cls, v: int | float | None) -> int:
         """Clamps duration to 0 if None or negative (DT-17)."""
-        if v is None or v < 0:
+        if v is None:
+            return 0
+        if isinstance(v, int):
+            return v if v >= 0 else 0
+        if v < 0:
             return 0
         return int(v)
 

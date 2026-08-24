@@ -1,6 +1,5 @@
 import logging
 import time
-import urllib.request
 from typing import Any
 
 import yt_dlp
@@ -19,32 +18,6 @@ YTDL_BASE_OPTS: dict[str, Any] = {
     "source_address": "0.0.0.0",
     "skip_download": True,
 }
-
-
-def validate_stream_url(url: str, timeout: float = 2.0) -> bool:
-    """
-    Performs a lightweight HTTP check to verify if a direct stream URL is still valid.
-    Sends a GET request with 'Range: bytes=0-0' or HEAD request.
-    """
-    if not url:
-        return False
-
-    headers = {"Range": "bytes=0-0"}
-
-    try:
-        req = urllib.request.Request(url, headers=headers, method="GET")
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return resp.status in (200, 206, 301, 302)
-    except Exception as e:
-        logger.debug(f"HTTP Range GET validation failed for {url}: {e}")
-
-    try:
-        req = urllib.request.Request(url, method="HEAD")
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return resp.status in (200, 206, 301, 302)
-    except Exception as e:
-        logger.debug(f"HTTP HEAD validation failed for {url}: {e}")
-        return False
 
 
 class SearchAPI(SearchPort):
@@ -129,11 +102,8 @@ class SearchAPI(SearchPort):
                 info = self._extractor_ydl.extract_info(video_url, download=False)
                 url = info.get("url") if info else None
                 if url:
-                    if validate_stream_url(url):
-                        logger.debug(f"Audio URL extracted and validated successfully (attempt {attempt}).")
-                        return url
-
-                    logger.warning(f"Extracted audio URL failed validation for: {video_url} (attempt {attempt})")
+                    logger.debug(f"Audio URL extracted successfully (attempt {attempt}).")
+                    return url
 
                 logger.warning(f"Could not extract audio URL for: {video_url} (attempt {attempt})")
 

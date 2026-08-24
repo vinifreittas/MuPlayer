@@ -75,6 +75,16 @@ class PlaybackService:
         """Atualiza a fila atual e retorna o índice da música selecionada."""
         self._queue.songs = songs
         if start_song:
+            if start_song.id is not None:
+                for idx, s in enumerate(songs):
+                    if s.id == start_song.id:
+                        self._queue.current_index = idx
+                        return idx
+            elif start_song.source:
+                for idx, s in enumerate(songs):
+                    if s.source == start_song.source:
+                        self._queue.current_index = idx
+                        return idx
             try:
                 self._queue.current_index = self._queue.songs.index(start_song)
             except ValueError:
@@ -107,7 +117,7 @@ class PlaybackService:
         """Extrai URL direta de reprodução com gerenciamento de cache."""
         cache_key = f"yt:audio_url:{url}"
 
-        if self.cache and cache_key in self.cache:
+        if self.cache:
             cached_url = self.cache.get(cache_key)
             if cached_url and isinstance(cached_url, str):
                 logger.debug(f"Cache hit for audio URL: '{url}'")
@@ -196,8 +206,10 @@ class PlaybackService:
             return None
 
         if self._is_shuffling and len(self._queue.songs) > 1:
-            available = [i for i in range(len(self._queue.songs)) if i != self._queue.current_index]
-            next_idx = random.choice(available)
+            idx = random.randrange(len(self._queue.songs) - 1)
+            if idx >= self._queue.current_index:
+                idx += 1
+            next_idx = idx
         else:
             next_idx = self._queue.current_index + 1
 
@@ -229,7 +241,7 @@ class PlaybackService:
         else:
             self._current_time += 1
 
-        duration = getattr(self._queue.active_song, "duration", 0)
+        duration = self._queue.active_song.duration
         if duration > 0 and self._current_time >= duration:
             self._current_time = 0
             self._is_playing = False

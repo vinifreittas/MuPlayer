@@ -19,7 +19,7 @@ class SearchService:
         """Executa busca por faixas com consulta prévia ao cache."""
         cache_key = f"yt:search:{query}:{limit}"
 
-        if self.cache and cache_key in self.cache:
+        if self.cache:
             cached_results = self.cache.get(cache_key)
             if cached_results is not None:
                 logger.debug(f"Cache hit for search query: '{query}'")

@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from tortoise import Tortoise
+from tortoise.expressions import F
 from tortoise.transactions import in_transaction
 
 from muplayer.application.ports import StoragePort
@@ -56,14 +57,30 @@ class DatabaseManager(StoragePort):
     async def get_playlists(self, limit: int = 50, offset: int = 0) -> list[Playlist]:
         """Retrieves playlists with pagination support, along with their associated songs. (DT-10)"""
         playlists_db = await PlaylistTable.all().offset(offset).limit(limit)
+        if not playlists_db:
+            return []
 
-        # O(1) Query to avoid N+1 problem on startup
-        playlist_songs = await PlaylistSongTable.all().order_by("playlist_id", "order").prefetch_related("song")
+        playlist_ids = [p.id for p in playlists_db]
+        playlist_songs = (
+            await PlaylistSongTable.filter(playlist_id__in=playlist_ids)
+            .order_by("playlist_id", "order")
+            .prefetch_related("song")
+        )
 
         grouped_songs: dict[int, list[Song]] = defaultdict(list)
         for ps in playlist_songs:
-            song = Song.model_validate(ps.song, from_attributes=True)
-            grouped_songs[ps.playlist_id].append(song.model_copy(update={"added_at": ps.added_at}))
+            s = ps.song
+            grouped_songs[ps.playlist_id].append(
+                Song(
+                    id=s.id,
+                    title=s.title,
+                    artist=s.artist,
+                    album=s.album,
+                    duration=s.duration,
+                    source=s.source,
+                    added_at=ps.added_at,
+                )
+            )
 
         result = []
         for p in playlists_db:
@@ -85,7 +102,15 @@ class DatabaseManager(StoragePort):
 
         playlist_songs = await PlaylistSongTable.filter(playlist=playlist_db).order_by("order").prefetch_related("song")
         songs = [
-            Song.model_validate(ps.song, from_attributes=True).model_copy(update={"added_at": ps.added_at})
+            Song(
+                id=ps.song.id,
+                title=ps.song.title,
+                artist=ps.song.artist,
+                album=ps.song.album,
+                duration=ps.song.duration,
+                source=ps.song.source,
+                added_at=ps.added_at,
+            )
             for ps in playlist_songs
         ]
 
@@ -161,11 +186,8 @@ class DatabaseManager(StoragePort):
 
         async with in_transaction():
             await entry.delete()
-            # Compact: shift all higher-order entries down by 1
-            subsequent = await PlaylistSongTable.filter(playlist=playlist_db, order__gt=song_index).order_by("order")
-            for ps in subsequent:
-                ps.order -= 1
-                await ps.save(update_fields=["order"])
+            # Compact: shift all higher-order entries down by 1 in a single atomic SQL update
+            await PlaylistSongTable.filter(playlist=playlist_db, order__gt=song_index).update(order=F("order") - 1)
 
         logger.info(f"Song at index {song_index} removed from playlist '{playlist_name}'. Positions compacted.")
         return True

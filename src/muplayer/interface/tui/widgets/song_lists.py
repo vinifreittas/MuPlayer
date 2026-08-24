@@ -49,12 +49,12 @@ class SearchView(Vertical):
     def compose(self) -> ComposeResult:
         yield ListView(id="song-results", classes="song-items")
 
-    def watch_search_results(self, search_results: list[Song]):
+    def watch_search_results(self, search_results: list[Song]) -> None:
         song_listview = self.query_one("#song-results", ListView)
         song_listview.clear()
-
-        for idx, song in enumerate(search_results, start=1):
-            song_listview.append(SongItem(idx, song))
+        if search_results:
+            items = [SongItem(idx, song) for idx, song in enumerate(search_results, start=1)]
+            song_listview.mount(*items)
 
     @on(ListView.Selected, ".song-items")
     def _on_song_click(self, event: ListView.Selected) -> None:
@@ -94,9 +94,9 @@ class SongList(Vertical):
     def watch_songs(self, songs: list[Song]) -> None:
         song_listview = self.query_one("#song-playlist", ListView)
         song_listview.clear()
-
-        for idx, song in enumerate(songs, start=1):
-            song_listview.append(SongItem(idx, song))
+        if songs:
+            items = [SongItem(idx, song) for idx, song in enumerate(songs, start=1)]
+            song_listview.mount(*items)
 
     @on(ListView.Selected, ".song-items")
     def _on_song_click(self, event: ListView.Selected) -> None:
