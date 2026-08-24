@@ -50,12 +50,12 @@ domain  ←  application  ←  infrastructure
 
 ```
 src/muplayer/
-├── __main__.py                      # Entry point (CLI parser / TUI launcher)
+├── __main__.py                      # Entry point delegating to main.py
+├── main.py                          # Main Component: Application Composition Root & App Launcher
 ├── domain/                          # Domain layer
 │   ├── models.py                    # Song, Playlist Pydantic schemas
 │   └── state.py                     # QueueState (tracks, index, active song)
-├── application/                     # Application layer
-│   ├── bootstrap.py                 # Composition Root & environment pre-flight validator
+├── application/                     # Application layer (pure use cases & ports)
 │   ├── library_service.py           # Playlist/library management service
 │   ├── playback_service.py          # Playback & queue control logic
 │   ├── search_service.py            # Search orchestration service with caching
@@ -80,7 +80,6 @@ src/muplayer/
 │   └── search.py                    # Search API (yt-dlp wrapper & stream URL extraction)
 └── interface/                       # Presentation layer
     ├── cli/                         # Typer CLI framework
-    │   ├── main.py                  # Main Typer app & callback handler
     │   └── commands/                # Subcommands (doctor, setup, update, version)
     └── tui/                         # Textual TUI interface
         ├── app.py                   # MuPlayer main Textual App class
@@ -96,7 +95,8 @@ src/muplayer/
 
 ## ⚙️ 4. Subsystems Overview
 
-1. **Bootstrap & Composition Root (`application/bootstrap.py`)**: Validates system environment (audio engines, terminal interactive TTY/color capabilities, JavaScript runtime for `yt-dlp`), wires dependency injection, boots the Textual app, and guarantees safe resource teardown (`finally`).
+1. **Main Component & Composition Root (`main.py`)**: Entry point defining the Typer CLI app. Validates system environment (audio engines, terminal interactive TTY/color capabilities, JavaScript runtime for `yt-dlp`), wires dependency injection, boots the Textual TUI app, and guarantees safe resource teardown (`finally`).
+
 2. **Audio Subsystem (`infrastructure/audio`)**: `PlayerAPI` wraps `mpv` (`MPVBackend`) with dynamic fallback to `vlc` (`VLCBackend`). Streams via `yt-dlp` extracted audio URLs (1h TTL cached).
 3. **Search Subsystem (`infrastructure/search`)**: `SearchAPI` uses `yt-dlp` to query YouTube videos. Requires a JS runtime (`quickjs`, `node`, `deno`, or `bun`). Results are cached for 5 min by `SearchService`.
 4. **Database (`infrastructure/database`)**: `DatabaseManager` manages async `Tortoise ORM` SQLite schema initialization and CRUD for songs and playlists (`app_data.db`).
