@@ -26,7 +26,7 @@ class SearchAPI(SearchPort):
     def __init__(
         self,
         js_runtime: dict[str, dict],
-        browser: str = "firefox",
+        browser: str,
         base_opts: dict[str, Any] | None = None,
     ) -> None:
         if not js_runtime:
