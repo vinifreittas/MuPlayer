@@ -25,10 +25,13 @@ class SearchAPI(SearchPort):
 
     def __init__(
         self,
-        js_runtime: dict[str, dict] | None = None,
+        js_runtime: dict[str, dict],
         browser: str = "firefox",
         base_opts: dict[str, Any] | None = None,
     ) -> None:
+        if not js_runtime:
+            raise ValueError("A valid JavaScript runtime (quickjs, node, deno, or bun) is required for SearchAPI.")
+
         self.base_opts = base_opts or YTDL_BASE_OPTS
 
         search_opts = {

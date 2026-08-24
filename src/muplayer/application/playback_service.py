@@ -113,7 +113,7 @@ class PlaybackService:
     # Playback & Stream Resolution
     # ------------------------------------------------------------------
 
-    def extract_audio_url(self, url: str) -> str:
+    def extract_audio_url(self, url: str) -> str | None:
         """Extrai URL direta de reprodução com gerenciamento de cache."""
         cache_key = f"yt:audio_url:{url}"
 
@@ -128,7 +128,15 @@ class PlaybackService:
         if audio_url and self.cache:
             self.cache.set(cache_key, audio_url, expire=3600)  # 1 hora TTL
 
-        return audio_url or url
+        if audio_url:
+            return audio_url
+
+        # Do not return YouTube webpage URLs as fallback, as MPV cannot play web URLs with ytdl=False
+        if url.startswith(("http://", "https://")) and ("youtube.com/watch" in url or "youtu.be/" in url):
+            logger.warning(f"Failed to extract direct audio URL for YouTube webpage: {url}")
+            return None
+
+        return url
 
     def invalidate_audio_cache(self, url: str) -> None:
         """Invalida a entrada em cache para uma URL de áudio com falha de reprodução."""
@@ -147,6 +155,10 @@ class PlaybackService:
 
         try:
             audio_url = self.extract_audio_url(url)
+            if not audio_url:
+                self.invalidate_audio_cache(url)
+                self._is_playing = False
+                raise RuntimeError("playback_engine_error")
 
             if self.player_api.play(audio_url):
                 self._is_playing = True
@@ -232,7 +244,7 @@ class PlaybackService:
 
     def update_progress(self) -> tuple[int, bool]:
         """Atualiza a posição atual de reprodução."""
-        if not self._is_playing or not self._queue.active_song:
+        if not self._is_playing or not self._queue.active_song or self.player_api.is_paused:
             return self._current_time, False
 
         engine_time = self.player_api.get_time()
