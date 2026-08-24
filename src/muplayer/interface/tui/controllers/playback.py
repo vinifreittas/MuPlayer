@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any
 from textual import on, work
 from textual.css.query import NoMatches
 from textual.message_pump import MessagePump
-from textual.widgets import Button
 
 from muplayer.infrastructure.i18n import t
 from muplayer.interface.tui.widgets import MiniPlayer, SearchView, SongList
@@ -89,14 +88,12 @@ class PlaybackMixin(MessagePump):
     def watch_is_shuffling(self, is_shuffling: bool) -> None:
         self.playback_service.is_shuffling = is_shuffling
         with contextlib.suppress(NoMatches):
-            btn = self.query_one(MiniPlayer).query_one("#shuffle-btn", Button)
-            btn.set_class(is_shuffling, "active")
+            self.query_one(MiniPlayer).is_shuffling = is_shuffling
 
     def watch_is_repeating(self, is_repeating: bool) -> None:
         self.playback_service.is_repeating = is_repeating
         with contextlib.suppress(NoMatches):
-            btn = self.query_one(MiniPlayer).query_one("#repeat-btn", Button)
-            btn.set_class(is_repeating, "active")
+            self.query_one(MiniPlayer).is_repeating = is_repeating
 
     # --------------------------------------------------------------------------
     # KEYBINDING ACTIONS
@@ -159,7 +156,7 @@ class PlaybackMixin(MessagePump):
 
     @on(SearchView.SongSelected)
     @on(SongList.SongSelected)
-    def _handle_song_selection(self, event: Any) -> None:
+    def _handle_song_selection(self, event: SearchView.SongSelected | SongList.SongSelected) -> None:
         idx = self.playback_service.set_queue(event.context_songs, start_song=event.song)
         self._play_track(idx)
 

@@ -25,7 +25,13 @@ class NavigationMixin(MessagePump):
     playback_service: PlaybackService
     library_service: LibraryService
     config_manager: ConfigManager
+    active_view: str
     update_timer: Any
+
+    def watch_active_view(self, active_view: str) -> None:
+        """Single point of contact with ContentSwitcher — reacts to the active_view reactive."""
+        with contextlib.suppress(NoMatches):
+            self.query_one(ContentSwitcher).current = active_view
 
     async def action_add_to_playlist(self) -> None:
         """Opens playlist modal for the active song."""
@@ -66,12 +72,11 @@ class NavigationMixin(MessagePump):
 
         with contextlib.suppress(NoMatches):
             self.query_one(SongList).songs = songs
-            self.query_one(ContentSwitcher).current = "dashboard-view"
+        self.active_view = "dashboard-view"
 
     @on(Header.HomeCalled)
     def _handle_home(self, event: Any) -> None:
-        with contextlib.suppress(NoMatches):
-            self.query_one(ContentSwitcher).current = "dashboard-view"
+        self.active_view = "dashboard-view"
 
     def _refresh_ui_translations(self) -> None:
         for widget_cls in (Header, Sidebar, SongList, MiniPlayer):

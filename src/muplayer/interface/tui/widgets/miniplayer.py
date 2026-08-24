@@ -1,6 +1,9 @@
+import contextlib
+
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
+from textual.css.query import NoMatches
 from textual.message import Message
 from textual.reactive import reactive
 from textual.widgets import Button, Label, ProgressBar
@@ -17,6 +20,8 @@ class MiniPlayer(Horizontal):
     time_elapsed = reactive(0)
     is_playing = reactive(False)
     volume = reactive(50)
+    is_shuffling = reactive(False)
+    is_repeating = reactive(False)
 
     class TogglePlay(Message):
         """Custom event sent to coordinate playback state with the app root."""
@@ -85,6 +90,14 @@ class MiniPlayer(Horizontal):
 
     def watch_volume(self, volume: int) -> None:
         self.query_one("#volume-bar", ProgressBar).update(progress=volume)
+
+    def watch_is_shuffling(self, is_shuffling: bool) -> None:
+        with contextlib.suppress(NoMatches):
+            self.query_one("#shuffle-btn", Button).set_class(is_shuffling, "active")
+
+    def watch_is_repeating(self, is_repeating: bool) -> None:
+        with contextlib.suppress(NoMatches):
+            self.query_one("#repeat-btn", Button).set_class(is_repeating, "active")
 
     @on(Button.Pressed, "#play-button")
     def _on_play_press(self) -> None:

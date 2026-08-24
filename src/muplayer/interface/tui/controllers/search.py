@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any
 from textual import on, work
 from textual.css.query import NoMatches
 from textual.message_pump import MessagePump
-from textual.widgets import ContentSwitcher
 
 from muplayer.infrastructure.i18n import t
 from muplayer.interface.tui.widgets import Header, SearchView
@@ -24,6 +23,7 @@ class SearchMixin(MessagePump):
 
     search_service: SearchService
     config_manager: ConfigManager
+    active_view: str
 
     @on(Header.SearchSubmitted)
     def _handle_search(self, event: Header.SearchSubmitted) -> None:
@@ -48,9 +48,9 @@ class SearchMixin(MessagePump):
     def _apply_search_results(self, query: str, results: list[Any]) -> None:
         self._set_loading(False)
         with contextlib.suppress(NoMatches):
-            search_view = self.query_one(SearchView)
-            search_view.search_results = results
-            self.query_one(ContentSwitcher).current = "search-view"
+            self.query_one(SearchView).search_results = results
+
+        self.active_view = "search-view"
 
         if not results:
             self.notify(t("search_no_results", query=query), severity="warning")

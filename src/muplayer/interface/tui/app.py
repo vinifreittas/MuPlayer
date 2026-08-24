@@ -42,6 +42,7 @@ class MuPlayer(PlaybackMixin, SearchMixin, NavigationMixin, App[None]):
     current_time: reactive[int] = reactive(0)
     is_shuffling: reactive[bool] = reactive(False)
     is_repeating: reactive[bool] = reactive(False)
+    active_view: reactive[str] = reactive("dashboard-view")
 
     def __init__(
         self,

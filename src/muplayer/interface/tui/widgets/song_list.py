@@ -1,65 +1,16 @@
 import contextlib
 
-from textual import events, on
+from textual import on
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.css.query import NoMatches
 from textual.message import Message
 from textual.reactive import reactive
-from textual.widgets import Button, Label, ListItem, ListView
+from textual.widgets import Button, Label, ListView
 
 from muplayer.domain import Song
 from muplayer.infrastructure.i18n import t
-from muplayer.interface.tui.helpers import format_time
-
-
-class SongItem(ListItem):
-    """Visual wrapper for rendering individual songs inside a ListView."""
-
-    def __init__(self, idx: int, song: Song, **kwargs):
-        super().__init__(**kwargs)
-        self.song_idx = idx
-        self.song = song
-
-    def on_enter(self, event: events.Enter) -> None:
-        self.add_class("-hover")
-
-    def on_leave(self, event: events.Leave) -> None:
-        self.remove_class("-hover")
-
-    def compose(self) -> ComposeResult:
-        with Horizontal():
-            yield Label(str(self.song_idx), classes="song-idx")
-            yield Label(self.song.title, classes="song-title")
-            yield Label(self.song.artist, classes="song-artist")
-            yield Label(format_time(self.song.duration), classes="song-duration")
-
-
-class SearchView(Vertical):
-    """Isolated Widget responsible for listing the tracks of the search results."""
-
-    search_results = reactive[list[Song]]([])
-
-    class SongSelected(Message):
-        def __init__(self, song: Song, context_songs: list[Song]):
-            super().__init__()
-            self.song = song
-            self.context_songs = context_songs
-
-    def compose(self) -> ComposeResult:
-        yield ListView(id="song-results", classes="song-items")
-
-    def watch_search_results(self, search_results: list[Song]) -> None:
-        song_listview = self.query_one("#song-results", ListView)
-        song_listview.clear()
-        if search_results:
-            items = [SongItem(idx, song) for idx, song in enumerate(search_results, start=1)]
-            song_listview.mount(*items)
-
-    @on(ListView.Selected, ".song-items")
-    def _on_song_click(self, event: ListView.Selected) -> None:
-        if isinstance(event.item, SongItem):
-            self.post_message(self.SongSelected(event.item.song, self.search_results))
+from muplayer.interface.tui.widgets.song_item import SongItem
 
 
 class SongList(Vertical):
