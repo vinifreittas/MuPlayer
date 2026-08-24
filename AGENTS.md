@@ -12,15 +12,14 @@ This document provides high-level architectural context, coding conventions, rep
 * **TUI Interface:** [Textual](https://textualize.io) (CSS-styled, reactive widgets, screens, themes)
 * **CLI Framework:** [Typer](https://typer.tiangolo.com) + [Rich](https://rich.readthedocs.io)
 * **Audio Engine:** `mpv` (`python-mpv`) with fallback to `vlc` (`python-vlc`)
-* **Streaming & Search:** `yt-dlp`
+* **Streaming & Search:** `yt-dlp` (requires system JavaScript runtime: `quickjs`, `node`, `deno`, or `bun`)
 * **Database & Cache:** `SQLite` via `Tortoise ORM` | `diskcache` for response caching
 * **Tooling:** `ruff` (linter/formatter), `pytest` / `pytest-asyncio` (testing), `deadcode`
 
-### Standard XDG Directory Structure
-* **Data (DB):** `~/.local/share/muplayer/muplayer.db`
-* **Cache:** `~/.cache/muplayer/`
-* **Config:** `~/.config/muplayer/config.json`
-* **Logs:** `~/.local/state/muplayer/muplayer.log`
+### Standard XDG Directory Structure (`platformdirs`)
+* **Data (DB & Config):** `~/.local/share/MuPlayer/` (`app_data.db`, `config.json`)
+* **Cache:** `~/.cache/MuPlayer/`
+* **Logs:** `~/.local/state/MuPlayer/logs/`
 
 ---
 
@@ -31,7 +30,7 @@ MuPlayer strictly follows **Layered Clean Architecture**:
 ```
 src/muplayer/
 ├── domain/           # Pure entities (Song, Playlist) & state (QueueState). No external dependencies.
-├── application/      # Use case orchestrators (Playback, Search, Library) & Ports/Interfaces.
+├── application/      # Use case orchestrators (Playback, Search, Library), Composition Root & Ports.
 ├── infrastructure/   # Adapters (Audio, Search, Database, System, Cache, Config, i18n, Logging).
 └── interface/        # Presentation layer: CLI commands and Textual TUI (app, mixins, widgets, screens).
 ```
@@ -56,39 +55,53 @@ src/muplayer/
 │   ├── models.py                    # Song, Playlist Pydantic schemas
 │   └── state.py                     # QueueState (tracks, index, active song)
 ├── application/                     # Application layer
-│   ├── library_service.py           # Playlist/library management
+│   ├── bootstrap.py                 # Composition Root & environment pre-flight validator
+│   ├── library_service.py           # Playlist/library management service
 │   ├── playback_service.py          # Playback & queue control logic
-│   ├── search_service.py            # Search orchestration with cache
+│   ├── search_service.py            # Search orchestration service with caching
 │   └── ports/                       # Abstract protocols (AudioPort, SearchPort, StoragePort, ConfigPort)
 ├── infrastructure/                  # Infrastructure adapters
-│   ├── audio/                       # Audio engine (PlayerAPI, mpv/vlc backends)
-│   ├── database/                    # Tortoise ORM (DatabaseManager, tables.py, config.py)
-│   ├── system/                      # Environment detector, native engine installer, XDG paths, package updater
-│   ├── search.py                    # Search API (yt-dlp wrapper & stream URL extraction)
+│   ├── audio/                       # Audio engine adapter
+│   │   ├── backends.py              # MPVBackend & VLCBackend implementations
+│   │   └── player.py                # PlayerAPI facade & engine selector
+│   ├── database/                    # Tortoise ORM database adapter
+│   │   ├── config.py                # Tortoise ORM configuration dict
+│   │   ├── manager.py               # DatabaseManager async initialization & CRUD
+│   │   ├── tables.py                # Tortoise ORM models (SongTable, PlaylistTable)
+│   │   └── migrations/              # Aerich migration schema files
+│   ├── system/                      # OS adapters & environment helpers
+│   │   ├── engine_installer.py      # System package manager auto-installer (apt, brew, pacman, etc.)
+│   │   ├── environment_detector.py # Audio engine & terminal capability detector
+│   │   ├── package_updater.py       # Git/pip auto-updater
+│   │   └── paths.py                 # Centralized XDG paths via platformdirs
 │   ├── config.py                    # Config file manager (ConfigManager)
 │   ├── i18n.py                      # Multilingual support (t(), set_locale)
-│   └── logging.py                   # Logger setup
+│   ├── logging.py                   # Centralized logger setup
+│   └── search.py                    # Search API (yt-dlp wrapper & stream URL extraction)
 └── interface/                       # Presentation layer
-    ├── cli/                         # Typer CLI subcommands (setup, doctor, update, version)
-    └── tui/                         # Textual TUI
-        ├── app.py                   # MuPlayer main Textual app
-        ├── style.tcss               # Stylesheet
+    ├── cli/                         # Typer CLI framework
+    │   ├── main.py                  # Main Typer app & callback handler
+    │   └── commands/                # Subcommands (doctor, setup, update, version)
+    └── tui/                         # Textual TUI interface
+        ├── app.py                   # MuPlayer main Textual App class
+        ├── helpers.py               # Time & formatting utilities
+        ├── style.tcss               # CSS stylesheet for Textual widgets
         ├── controllers/             # Mixins (PlaybackMixin, SearchMixin, NavigationMixin)
-        ├── widgets/                 # Header, MiniPlayer, Sidebar, SongList
-        ├── screens/                 # ConfigurationsScreen, SelectPlaylistModal
-        ├── themes/                  # Spotify Dark theme
-        └── helpers.py               # Time formatting utilities
+        ├── screens/                 # Screens & Modals (ConfigurationsScreen, SelectPlaylistModal)
+        ├── themes/                  # Custom color themes (Spotify Dark)
+        └── widgets/                 # Reactive UI components (Header, MiniPlayer, Sidebar, SongList)
 ```
 
 ---
 
 ## ⚙️ 4. Subsystems Overview
 
-1. **Audio Subsystem (`infrastructure/audio`)**: `PlayerAPI` wraps `mpv` with dynamic fallback to `vlc`. Streams via `yt-dlp` extracted audio URLs (1h TTL cached).
-2. **Search Subsystem (`infrastructure/search`)**: `SearchAPI` uses `yt-dlp` to query YouTube videos. Results are cached for 5 min by `SearchService`.
-3. **Database (`infrastructure/database`)**: `DatabaseManager` manages async `Tortoise ORM` SQLite schema initialization and CRUD for songs and playlists.
-4. **TUI Application (`interface/tui`)**: `MuPlayer` app inherits from `PlaybackMixin`, `SearchMixin`, and `NavigationMixin`. Uses Textual reactive state properties for UI updates.
-5. **System & Environment (`infrastructure/system`)**: Checks audio engine shared libraries (`libmpv`/`libvlc`), interactive TTY/ANSI terminal capabilities, resolves XDG paths, performs package updates, and auto-installs missing packages using system package managers (`apt`, `pacman`, `dnf`, `brew`, `choco`, `scoop`).
+1. **Bootstrap & Composition Root (`application/bootstrap.py`)**: Validates system environment (audio engines, terminal interactive TTY/color capabilities, JavaScript runtime for `yt-dlp`), wires dependency injection, boots the Textual app, and guarantees safe resource teardown (`finally`).
+2. **Audio Subsystem (`infrastructure/audio`)**: `PlayerAPI` wraps `mpv` (`MPVBackend`) with dynamic fallback to `vlc` (`VLCBackend`). Streams via `yt-dlp` extracted audio URLs (1h TTL cached).
+3. **Search Subsystem (`infrastructure/search`)**: `SearchAPI` uses `yt-dlp` to query YouTube videos. Requires a JS runtime (`quickjs`, `node`, `deno`, or `bun`). Results are cached for 5 min by `SearchService`.
+4. **Database (`infrastructure/database`)**: `DatabaseManager` manages async `Tortoise ORM` SQLite schema initialization and CRUD for songs and playlists (`app_data.db`).
+5. **TUI Application (`interface/tui`)**: `MuPlayer` app inherits from `PlaybackMixin`, `SearchMixin`, and `NavigationMixin`. Uses Textual reactive state properties for UI updates.
+6. **System & Environment (`infrastructure/system`)**: Checks audio engine shared libraries (`libmpv`/`libvlc`), interactive TTY/ANSI terminal capabilities, resolves XDG paths via `platformdirs`, performs package updates, and auto-installs missing packages using system package managers (`apt`, `pacman`, `dnf`, `brew`, `choco`, `scoop`).
 
 ---
 
@@ -100,8 +113,12 @@ All commands must be executed using `uv`:
 # Install dependencies
 uv sync
 
-# Run application
+# Run application (TUI)
 uv run muplayer
+
+# Run CLI subcommands
+uv run muplayer doctor
+uv run muplayer setup
 
 # Run linter and auto-fix code style (ALWAYS use --fix)
 uv run ruff check --fix src/
