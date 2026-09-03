@@ -1,5 +1,4 @@
 import logging
-import random
 
 import diskcache
 
@@ -19,8 +18,6 @@ class PlaybackService:
         self._queue = QueueState()
         self._is_playing: bool = False
         self._is_loading: bool = False
-        self._is_shuffling: bool = False
-        self._is_repeating: bool = False
         self._current_time: int = 0
 
     # ------------------------------------------------------------------
@@ -53,19 +50,19 @@ class PlaybackService:
 
     @property
     def is_shuffling(self) -> bool:
-        return self._is_shuffling
+        return self._queue.is_shuffling
 
     @is_shuffling.setter
     def is_shuffling(self, value: bool) -> None:
-        self._is_shuffling = value
+        self._queue.is_shuffling = value
 
     @property
     def is_repeating(self) -> bool:
-        return self._is_repeating
+        return self._queue.is_repeating
 
     @is_repeating.setter
     def is_repeating(self, value: bool) -> None:
-        self._is_repeating = value
+        self._queue.is_repeating = value
 
     # ------------------------------------------------------------------
     # Queue management
@@ -73,29 +70,12 @@ class PlaybackService:
 
     def set_queue(self, songs: list[Song], start_song: Song | None = None) -> int:
         """Atualiza a fila atual e retorna o índice da música selecionada."""
-        self._queue.songs = songs
-        if start_song:
-            if start_song.id is not None:
-                for idx, s in enumerate(songs):
-                    if s.id == start_song.id:
-                        self._queue.current_index = idx
-                        return idx
-            elif start_song.source:
-                for idx, s in enumerate(songs):
-                    if s.source == start_song.source:
-                        self._queue.current_index = idx
-                        return idx
-            try:
-                self._queue.current_index = self._queue.songs.index(start_song)
-            except ValueError:
-                self._queue.current_index = 0
-        else:
-            self._queue.current_index = 0
-        return self._queue.current_index
+        return self._queue.set_songs(songs, start_song=start_song)
 
     def select_track(self, index: int) -> Song | None:
         """Valida e define a faixa ativa no índice especificado."""
-        if not self._queue.songs or not (0 <= index < len(self._queue.songs)):
+        selected = self._queue.select_track(index)
+        if selected is None:
             self.pause()
             self._is_loading = False
             return None
@@ -103,11 +83,8 @@ class PlaybackService:
         self.player_api.pause()
         self._is_playing = False
         self._is_loading = True
-
-        self._queue.current_index = index
-        self._queue.active_song = self._queue.songs[index]
         self._current_time = 0
-        return self._queue.active_song
+        return selected
 
     # ------------------------------------------------------------------
     # Playback & Stream Resolution
@@ -214,29 +191,11 @@ class PlaybackService:
 
     def get_next_index(self) -> int | None:
         """Determina o índice da próxima faixa com base nas regras de shuffle e repeat."""
-        if not self._queue.songs:
-            return None
-
-        if self._is_shuffling and len(self._queue.songs) > 1:
-            idx = random.randrange(len(self._queue.songs) - 1)
-            if idx >= self._queue.current_index:
-                idx += 1
-            next_idx = idx
-        else:
-            next_idx = self._queue.current_index + 1
-
-        if next_idx >= len(self._queue.songs):
-            if self._is_repeating:
-                return 0
-            return None
-
-        return next_idx
+        return self._queue.get_next_index()
 
     def get_prev_index(self) -> int:
         """Retorna o índice da faixa anterior considerando o tempo corrido."""
-        if self._current_time > 3 or self._queue.current_index <= 0:
-            return self._queue.current_index
-        return self._queue.current_index - 1
+        return self._queue.get_prev_index(current_time=self._current_time)
 
     # ------------------------------------------------------------------
     # Progress

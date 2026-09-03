@@ -41,6 +41,11 @@ domain  ←  application  ←  infrastructure
                          ←  interface
 ```
 
+* **Domain (`domain/`)**: Pure core models & state. CANNOT import from any other layer.
+* **Application (`application/`)**: Orchestrates use cases & abstract ports. Imports ONLY from `domain`.
+* **Infrastructure (`infrastructure/`)**: Concrete engine adapters. Imports from `domain` and `application`.
+* **Interface (`interface/`)**: Presentation layer (TUI/CLI). Imports from `domain`, `application`, and `infrastructure` (via composition root).
+
 ### Data & Execution Flow Pattern
 `User Input (TUI/CLI)` ➔ `Controller Mixin` ➔ `Application Service` ➔ `Infrastructure Port` ➔ `Adapter Engine (mpv/yt-dlp/Tortoise)` ➔ `Reactive State` ➔ `Textual Widget UI`
 
@@ -53,8 +58,10 @@ src/muplayer/
 ├── __main__.py                      # Entry point delegating to main.py
 ├── main.py                          # Main Component: Application Composition Root & App Launcher
 ├── domain/                          # Domain layer
+│   ├── config.py                    # AppConfig Pydantic configuration model
 │   ├── models.py                    # Song, Playlist Pydantic schemas
 │   └── state.py                     # QueueState (tracks, index, active song)
+
 ├── application/                     # Application layer (pure use cases & ports)
 │   ├── library_service.py           # Playlist/library management service
 │   ├── playback_service.py          # Playback & queue control logic
@@ -91,12 +98,18 @@ src/muplayer/
         └── widgets/                 # Reactive UI components (Header, MiniPlayer, Sidebar, SongList)
 ```
 
+### Key Navigation Links
+* **Entry point:** `main.py`
+* **Domain models:** `config.py` | `models.py` | `state.py`
+* **Services:** `playback_service.py` | `library_service.py` | `search_service.py`
+* **Adapters:** `player.py` | `manager.py` | `search.py`
+* **TUI App:** `app.py` | `style.tcss`
+
 ---
 
 ## ⚙️ 4. Subsystems Overview
 
 1. **Main Component & Composition Root (`main.py`)**: Entry point defining the Typer CLI app. Validates system environment (audio engines, terminal interactive TTY/color capabilities, JavaScript runtime for `yt-dlp`), wires dependency injection, boots the Textual TUI app, and guarantees safe resource teardown (`finally`).
-
 2. **Audio Subsystem (`infrastructure/audio`)**: `PlayerAPI` wraps `mpv` (`MPVBackend`) with dynamic fallback to `vlc` (`VLCBackend`). Streams via `yt-dlp` extracted audio URLs (1h TTL cached).
 3. **Search Subsystem (`infrastructure/search`)**: `SearchAPI` uses `yt-dlp` to query YouTube videos. Requires a JS runtime (`quickjs`, `node`, `deno`, or `bun`). Results are cached for 5 min by `SearchService`.
 4. **Database (`infrastructure/database`)**: `DatabaseManager` manages async `Tortoise ORM` SQLite schema initialization and CRUD for songs and playlists (`app_data.db`).
@@ -107,7 +120,7 @@ src/muplayer/
 
 ## 🛠️ 5. Development & Validation Commands
 
-All commands must be executed using `uv`:
+All commands MUST be executed using `uv`:
 
 ```bash
 # Install dependencies
@@ -145,28 +158,55 @@ uv run deadcode src
 
 ---
 
-## 🎯 7. Non-Negotiable Operational Rules for Agents
+## 🔄 7. AI Agent Execution Lifecycle
 
-Any AI agent working on MuPlayer must strictly adhere to these 5 rules:
+When executing tasks in this repository, follow this 4-step lifecycle:
 
-### 1. Pragmatic Simplicity (KISS)
-* Solve problems with the minimum necessary code, abstraction, and complexity.
-* Avoid over-engineering. NEVER create generic abstractions or unnecessary helper utilities for simple tasks.
+1. **Understand & Inspect**: Inspect relevant files before making changes. Never guess file paths, symbol names, or imports.
+2. **Surgical Modification**: Modify only target lines and modules needed for the task. Keep changes minimal, lean, and readable.
+3. **Mandatory Verification Protocol**: Run static check (`uv run ruff check --fix src/`), format (`uv run ruff format src/`), and test suite (`uv run pytest`).
+4. **Documentation Sync**: If architectural patterns, CLI commands, or file structures change, update `AGENTS.md` immediately.
 
-### 2. Zero Tolerance for Ambiguity
-* Never assume requirements, business logic, architectures, or unstated behaviors.
-* If instructions or contracts are unclear, **STOP IMMEDIATELY** and ask for clarification.
+---
 
-### 3. Surgical Scope
-* Keep focus strictly restricted to the requested task. Modify only target files and lines.
-* NEVER perform peripheral refactoring, formatting edits in adjacent code, or modifications outside the target module.
+## 🎯 8. Non-Negotiable Operational Rules for AI Agents
 
-### 4. Double-Check Verification Protocol
-* Verify delivery before completing:
-  1. Does the diff strictly address the requested scope?
-  2. Are syntax, typing, and imports correct?
-  3. Was static verification executed with `uv run ruff check --fix src/`?
-  4. Were existing features or tests unintentionally broken?
+All AI agents working on MuPlayer MUST strictly obey these 7 core principles:
 
-### 5. Continuous Documentation Maintenance (Keep AGENTS.md Updated)
-* Always keep `AGENTS.md` updated whenever architectural patterns, conventions, commands, or workflows evolve.
+### 1. Strict Clean Architecture Enforcement
+* **Rule**: Respect layer boundaries at all times (`domain` ← `application` ← `infrastructure` / `interface`).
+* **DO**: Keep `domain` pure and completely free of external dependencies.
+* **NEVER**: Import `infrastructure` or `interface` modules into `domain` or `application`.
+
+### 2. Pragmatic Simplicity (KISS & YAGNI)
+* **Rule**: Solve problems with the minimum necessary code, abstraction, and complexity.
+* **DO**: Write explicit, direct code that fulfills the exact requirement.
+* **NEVER**: Create generic abstractions, unused wrapper classes, or speculative future-proofing logic.
+
+### 3. Zero Tolerance for Ambiguity
+* **Rule**: Require exact clarity before modifying logic or contracts.
+* **DO**: Stop and ask the user for clarification if instructions, edge cases, or API specifications are unclear.
+* **NEVER**: Guess unstated business rules, silent fallback behaviors, or ambiguous parameters.
+
+### 4. Surgical Scope & Zero Unrelated Edits
+* **Rule**: Restrict modifications strictly to the target task.
+* **DO**: Edit only lines and files directly required to fulfill the user request.
+* **NEVER**: Perform peripheral refactoring, formatting edits in adjacent code, or auto-reformatting of untouched files.
+
+### 5. Mandatory 3-Step Verification Protocol
+* **Rule**: Never declare a task complete without executing verification.
+* **DO**: Run the following validation sequence before completing work:
+  1. `uv run ruff check --fix src/` (Static linting & import sorting)
+  2. `uv run ruff format src/` (Code formatting)
+  3. `uv run pytest` (Unit & integration test suite)
+* **NEVER**: Assume code works just because it compiled or was saved to disk.
+
+### 6. Continuous Documentation Maintenance
+* **Rule**: Keep repository context always up to date.
+* **DO**: Update `AGENTS.md` whenever architectural patterns, conventions, sub-systems, CLI subcommands, or directory structures evolve.
+* **NEVER**: Leave documentation out of sync with actual source code.
+
+### 7. Lean, Readable & Self-Explanatory Code
+* **Rule**: Source code must be immediately understandable to any human or AI reading it.
+* **DO**: Enforce clear, explicit naming and single-responsibility functions.
+* **NEVER**: Keep dead code, unused imports, commented-out code blocks, or redundant comments that merely restate what code does.

@@ -2,18 +2,10 @@ import json
 import logging
 from pathlib import Path
 
-from pydantic import BaseModel, Field
-
 from muplayer.application.ports import ConfigPort
+from muplayer.domain import AppConfig
 
 logger = logging.getLogger(__name__)
-
-
-class AppConfig(BaseModel):
-    language: str = Field(default="en", pattern="^(en|pt)$")
-    efficiency_mode: bool = False
-    search_limit: int = Field(default=15, ge=1, le=50)
-    volume: int = Field(default=80, ge=0, le=100)
 
 
 class ConfigManager(ConfigPort):

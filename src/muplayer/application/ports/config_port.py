@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from muplayer.infrastructure.config import AppConfig
+    from muplayer.domain import AppConfig
 
 
 class ConfigPort(ABC):

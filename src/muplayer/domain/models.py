@@ -27,6 +27,11 @@ class Song(BaseModel):
             return 0
         return int(v)
 
+    @property
+    def has_source(self) -> bool:
+        """Returns True if the song has a non-empty audio source URL."""
+        return bool(self.source and self.source.strip())
+
 
 class Playlist(BaseModel):
     # Permite que o Pydantic leia diretamente objetos de ORM usando `model_validate`
@@ -41,3 +46,14 @@ class Playlist(BaseModel):
     def song_count(self) -> int:
         """Returns the number of songs in the playlist."""
         return len(self.songs)
+
+    @property
+    def total_duration(self) -> int:
+        """Returns total duration of all songs in the playlist in seconds."""
+        return sum(s.duration for s in self.songs)
+
+    def contains_song(self, song_id: int) -> bool:
+        """Checks if a song with the given ID exists in the playlist."""
+        if song_id is None:
+            return False
+        return any(s.id == song_id for s in self.songs)
