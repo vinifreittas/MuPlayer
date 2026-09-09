@@ -3,10 +3,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Protocol
 
 if TYPE_CHECKING:
+    from muplayer.application.config_service import ConfigService
     from muplayer.application.library_service import LibraryService
     from muplayer.application.playback_service import PlaybackService
     from muplayer.application.search_service import SearchService
-    from muplayer.infrastructure.config import ConfigManager
 
 
 class ControllerContext(Protocol):
@@ -15,7 +15,7 @@ class ControllerContext(Protocol):
     playback_service: PlaybackService
     library_service: LibraryService
     search_service: SearchService
-    config_manager: ConfigManager
+    config_service: ConfigService
 
     is_playing: bool
     current_time: int

@@ -4,24 +4,24 @@ import logging
 from typing import Literal
 
 from muplayer.application.ports import AudioPort
-from muplayer.infrastructure.audio.backends import MpvBackend, PlayerBackend, VlcBackend
+from muplayer.infrastructure.audio.backends import MPVBackend, PlayerBackend, VLCBackend
 
 logger = logging.getLogger(__name__)
 
 # Maps engine name strings to their backend classes
 _ENGINE_MAP: dict[str, type[PlayerBackend]] = {
-    "mpv": MpvBackend,
-    "vlc": VlcBackend,
+    "mpv": MPVBackend,
+    "vlc": VLCBackend,
 }
 
 
-class PlayerAPI(AudioPort):
+class AudioPlayerAdapter(AudioPort):
     """Handles core audio playback features using a standard PlayerBackend interface."""
 
     def __init__(self, engine: Literal["mpv", "vlc"]) -> None:
         self._engine = engine
         self._player: PlayerBackend | None = None
-        logger.debug(f"PlayerAPI wrapper instantiated with engine='{engine}' (lazy loading active).")
+        logger.debug(f"AudioPlayerAdapter wrapper instantiated with engine='{engine}' (lazy loading active).")
 
     @property
     def player(self) -> PlayerBackend:
@@ -63,38 +63,44 @@ class PlayerAPI(AudioPort):
             logger.warning("Attempted to play an empty audio source.")
             return False
 
-        logger.info(f"Playing source: {source}")
+        logger.info("Starting playback (engine=%s).", self._engine)
+        logger.debug("Playback source URL: %s", source)
+        logger.debug("AudioPlayerAdapter.play(): is_paused before call = %s", self.player.is_paused)
         try:
-            self.player.play(source, user_agent=user_agent)
+            # Unset pause BEFORE calling play() to avoid MPV race condition:
+            # mpv loads the new file preserving the current pause state asynchronously,
+            # so setting pause=False after play() risks the file initializing in paused mode.
             self.is_paused = False
+            self.player.play(source, user_agent=user_agent)
+            logger.debug("AudioPlayerAdapter.play(): is_paused after play() = %s", self.player.is_paused)
             return True
         except Exception as e:
-            logger.error(f"Player error while trying to play: {e}", exc_info=True)
+            logger.error("Player error while trying to play source: %s", e, exc_info=True)
             return False
 
-    def get_time(self) -> int:
+    def get_position(self) -> int:
         """Returns the current playback position in seconds from the audio engine (DT-33)."""
         if self._player is None:
             return 0
-        return self._player.get_time()
+        return self._player.get_position()
 
     def pause(self) -> None:
-        logger.info("Pausing player.")
+        logger.debug("Pausing player. (is_paused before: %s)", self.player.is_paused)
         self.is_paused = True
 
     def resume(self) -> None:
-        logger.info("Resuming player.")
+        logger.debug("Resuming player. (is_paused before: %s)", self.player.is_paused)
         self.is_paused = False
 
     def toggle_pause(self) -> None:
-        logger.info("Toggling player pause state.")
+        logger.debug("Toggling player pause state.")
         self.is_paused = not self.is_paused
 
     def close(self) -> None:
         if self._player is not None:
             try:
                 self._player.terminate()
-                logger.debug("PlayerAPI backend terminated successfully.")
+                logger.debug("AudioPlayerAdapter backend terminated successfully.")
             except Exception as e:
                 logger.warning(f"Failed to cleanly terminate player backend: {e}")
             finally:

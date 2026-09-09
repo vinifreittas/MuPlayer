@@ -1,0 +1,10 @@
+Reconstruir o Engine Installer e System Detector. A função deles é garantir que o sistema tem o que é necessário para o projeto (Player de áudio MPV/VLC e JS Runtime QuickJS/Node) e eles não estão cumprindo essa função bem.
+
+1. Para os Players de Áudio (MPV / VLC):
+   - Plataformas com gerenciador de pacotes padrão funcional (`apt`, `brew`, `pacman`, `dnf`): Baixar e instalar especificamente o pacote de biblioteca compartilhada (`libmpv-dev`, `libvlc-dev`, `mpv-libs`, `vlc-core`).
+   - Plataformas sem gerenciador de pacotes padrão ou no Windows (onde Winget tenta baixar a aplicação gráfica inteira em vez da DLL): Fazer o download direto dos binários pré-compilados da biblioteca compartilhada (ex: `mpv-1.dll`/`libmpv-2.dll` ou `libvlc.dll` gerados/hospedados via GitHub Actions / releases oficiais) e posicioná-los no `System32` ou na pasta local de bibliotecas do app (`%LOCALAPPDATA%\MuPlayer\libs`).
+
+2. Para o JS Runtime (QuickJS-NG / Node / Deno / Bun):
+   - O detector (`environment_detector.py`) deve primeiro verificar corretamente se o sistema JÁ possui algum JS runtime instalado e funcional (`quickjs`, `qjs`, `node`, `deno`, `bun`).
+   - Se NENHUM JS runtime for detectado, o instalador (`engine_installer.py`) deve baixar automaticamente o **binário pré-compilado do `quickjs-ng`** (`qjs` / `qjs.exe`, ~1-2MB) compilado para cada plataforma (Windows, Linux, macOS) via GitHub Actions / releases oficiais.
+   - O binário do `quickjs-ng` deve ser gravado no `System32` ou na pasta de binários do app (`%LOCALAPPDATA%\MuPlayer\bin` no Windows ou `~/.local/bin` no Linux/macOS) e registrado no `PATH` do sistema/sessão.

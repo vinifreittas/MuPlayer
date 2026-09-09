@@ -20,7 +20,7 @@ class ConfigManager(ConfigPort):
                     data = json.load(f)
                     return AppConfig.model_validate(data)
             except Exception as e:
-                logger.error(f"Failed to load config: {e}")
+                logger.error("Failed to load config from '%s': %s", self.config_path, e, exc_info=True)
 
         # Return default if not exists or failed to parse
         return AppConfig()
@@ -30,7 +30,7 @@ class ConfigManager(ConfigPort):
             with open(self.config_path, "w", encoding="utf-8") as f:
                 json.dump(self.config.model_dump(), f, indent=4)
         except Exception as e:
-            logger.error(f"Failed to save config: {e}")
+            logger.error("Failed to save config to '%s': %s", self.config_path, e, exc_info=True)
 
     def get(self) -> AppConfig:
         return self.config
@@ -43,4 +43,6 @@ class ConfigManager(ConfigPort):
             self.config = AppConfig.model_validate(current_data)
             self.save()
         except Exception as e:
-            logger.error(f"Failed to update config with kwargs {kwargs}: {e}")
+            logger.error(
+                "Failed to update config at '%s' with kwargs %s: %s", self.config_path, kwargs, e, exc_info=True
+            )

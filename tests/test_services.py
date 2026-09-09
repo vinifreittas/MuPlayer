@@ -7,9 +7,9 @@ from muplayer.domain import Song
 def test_playback_service_queue_and_selection():
     """Valida o gerenciamento de fila e seleção de faixa no PlaybackService."""
     mock_audio_port = MagicMock()
-    mock_search_port = MagicMock()
+    mock_media_port = MagicMock()
 
-    service = PlaybackService(player_api=mock_audio_port, search_api=mock_search_port)
+    service = PlaybackService(audio_player=mock_audio_port, media_provider=mock_media_port)
 
     song1 = Song(id=1, title="Song A", artist="Artist A", source="http://example.com/a")
     song2 = Song(id=2, title="Song B", artist="Artist B", source="http://example.com/b")
@@ -28,3 +28,25 @@ def test_playback_service_queue_and_selection():
 
     # Próxima faixa sem shuffle/repeat
     assert service.get_next_index() == 1
+
+
+def test_config_service_updates_and_volume():
+    """Valida o funcionamento do ConfigService e atualização de configurações/volume."""
+    from muplayer.application.config_service import ConfigService
+    from muplayer.domain.config import AppConfig
+
+    mock_config_port = MagicMock()
+    mock_config_port.get.return_value = AppConfig(volume=50, language="en", search_limit=15)
+
+    config_service = ConfigService(config_port=mock_config_port)
+
+    assert config_service.config.volume == 50
+
+    # Updating volume clamped
+    clamped = config_service.update_volume(120)
+    assert clamped == 100
+    mock_config_port.update.assert_called_with(volume=100)
+
+    # Updating settings with side-effect (language)
+    config_service.update(language="pt", search_limit=25)
+    mock_config_port.update.assert_called_with(language="pt", search_limit=25)

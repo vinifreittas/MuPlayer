@@ -6,7 +6,7 @@ from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Input, Label, Select, Static, Switch
 
-from muplayer.infrastructure.config import AppConfig
+from muplayer.domain import AppConfig
 from muplayer.infrastructure.i18n import t
 
 

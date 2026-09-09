@@ -9,14 +9,14 @@ from textual.message_pump import MessagePump
 from textual.widgets import ContentSwitcher
 
 from muplayer.domain import Song
-from muplayer.infrastructure.i18n import set_locale, t
+from muplayer.infrastructure.i18n import t
 from muplayer.interface.tui.screens import Configurations, SelectPlaylistModal
 from muplayer.interface.tui.widgets import Header, MiniPlayer, Sidebar, SongList
 
 if TYPE_CHECKING:
+    from muplayer.application.config_service import ConfigService
     from muplayer.application.library_service import LibraryService
     from muplayer.application.playback_service import PlaybackService
-    from muplayer.infrastructure.config import ConfigManager
 
 
 class NavigationMixin(MessagePump):
@@ -24,7 +24,7 @@ class NavigationMixin(MessagePump):
 
     playback_service: PlaybackService
     library_service: LibraryService
-    config_manager: ConfigManager
+    config_service: ConfigService
     active_view: str
     update_timer: Any
 
@@ -89,11 +89,10 @@ class NavigationMixin(MessagePump):
     def _handle_settings(self, event: Any) -> None:
         def check_settings(new_settings: dict[str, Any] | None) -> None:
             if new_settings:
-                self.config_manager.update(**new_settings)
-                if lang := new_settings.get("language"):
-                    set_locale(lang)
+                self.config_service.update(**new_settings)
+                if "language" in new_settings:
                     self._refresh_ui_translations()
                 if "efficiency_mode" in new_settings and self.update_timer:
                     self.update_timer.interval = 5.0 if new_settings["efficiency_mode"] else 1.0
 
-        self.push_screen(Configurations(config=self.config_manager.config), check_settings)
+        self.push_screen(Configurations(config=self.config_service.config), check_settings)

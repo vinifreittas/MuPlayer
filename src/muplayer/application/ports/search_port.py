@@ -4,16 +4,11 @@ from muplayer.domain import Song
 
 
 class SearchPort(ABC):
-    """Port defining the contract for media search and audio URL extraction."""
+    """Port defining the contract for catalog search."""
 
     @abstractmethod
-    def search(self, query: str, max_results: int = 15) -> list[Song]:
+    def search(self, query: str, limit: int = 15) -> list[Song]:
         """Search for songs matching the query."""
-        ...
-
-    @abstractmethod
-    def extract_audio_url(self, video_url: str) -> str | None:
-        """Extract a direct audio stream URL from a video URL."""
         ...
 
     @abstractmethod

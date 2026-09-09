@@ -4,7 +4,7 @@ from typing import Any
 
 import yt_dlp
 
-from muplayer.application.ports import SearchPort
+from muplayer.application.ports import MediaPort, SearchPort
 from muplayer.domain import Song
 
 logger = logging.getLogger(__name__)
@@ -20,8 +20,8 @@ YTDL_BASE_OPTS: dict[str, Any] = {
 }
 
 
-class SearchAPI(SearchPort):
-    """Handles YouTube interactions via persistent yt-dlp instances."""
+class YouTubeMediaProvider(SearchPort, MediaPort):
+    """Handles YouTube interactions (catalog search and audio stream extraction) via persistent yt-dlp instances."""
 
     def __init__(
         self,
@@ -30,7 +30,9 @@ class SearchAPI(SearchPort):
         base_opts: dict[str, Any] | None = None,
     ) -> None:
         if not js_runtime:
-            raise ValueError("A valid JavaScript runtime (quickjs, node, deno, or bun) is required for SearchAPI.")
+            raise ValueError(
+                "A valid JavaScript runtime (quickjs, node, deno, or bun) is required for YouTubeMediaProvider."
+            )
 
         self.base_opts = base_opts or YTDL_BASE_OPTS
 
@@ -57,7 +59,7 @@ class SearchAPI(SearchPort):
 
         self._search_ydl = yt_dlp.YoutubeDL(search_opts)
         self._extractor_ydl = yt_dlp.YoutubeDL(extractor_opts)
-        logger.debug("SearchAPI initialized with specialized YoutubeDL instances.")
+        logger.debug("YouTubeMediaProvider initialized with specialized YoutubeDL instances.")
 
     def close(self) -> None:
         """Encerra e limpa os recursos das instâncias do yt-dlp."""
@@ -66,14 +68,14 @@ class SearchAPI(SearchPort):
                 self._search_ydl.close()
             if hasattr(self, "_extractor_ydl"):
                 self._extractor_ydl.close()
-            logger.debug("SearchAPI closed cleanly.")
+            logger.debug("YouTubeMediaProvider closed cleanly.")
         except Exception as e:
             logger.warning(f"Error closing YoutubeDL instances: {e}")
 
-    def search(self, query: str, max_results: int = 15) -> list[Song]:
+    def search(self, query: str, limit: int = 15) -> list[Song]:
         """Search for songs on YouTube using the lightweight search instance."""
-        logger.info(f"Searching for '{query}' (max_results={max_results})")
-        search_query = f"ytsearch{max_results}:{query}"
+        logger.info(f"Searching for '{query}' (limit={limit})")
+        search_query = f"ytsearch{limit}:{query}"
 
         try:
             info = self._search_ydl.extract_info(search_query, download=False) or {}
@@ -92,7 +94,7 @@ class SearchAPI(SearchPort):
                 if e
             ]
         except Exception as e:
-            logger.error(f"Unexpected YouTube search error for query '{query}': {e}", exc_info=True)
+            logger.error("Unexpected YouTube search error for query '%s': %s", query, e, exc_info=True)
             return []
 
     def extract_audio_url(self, video_url: str) -> str | None:
@@ -105,23 +107,31 @@ class SearchAPI(SearchPort):
                 info = self._extractor_ydl.extract_info(video_url, download=False)
                 url = info.get("url") if info else None
                 if url:
-                    logger.debug(f"Audio URL extracted successfully (attempt {attempt}).")
+                    logger.debug("Audio URL extracted successfully (attempt %d).", attempt)
                     return url
 
-                logger.warning(f"Could not extract audio URL for: {video_url} (attempt {attempt})")
+                logger.warning(
+                    "yt-dlp returned no URL for '%s' (info was %s) on attempt %d.",
+                    video_url,
+                    "None" if info is None else "present but missing 'url' key",
+                    attempt,
+                )
 
             except yt_dlp.utils.DownloadError as e:
                 last_exception = e
-                logger.warning(f"yt-dlp DownloadError on attempt {attempt}/{MAX_RETRIES}: {e}")
+                logger.warning("yt-dlp DownloadError on attempt %d/%d: %s", attempt, MAX_RETRIES, e)
                 if attempt < MAX_RETRIES:
                     delay = RETRY_BASE_DELAY * attempt
-                    logger.info(f"Retrying in {delay:.1f}s...")
+                    logger.debug("Retrying audio URL extraction in %.1fs...", delay)
                     time.sleep(delay)
             except Exception as e:
-                logger.error(f"Non-retriable error extracting audio URL for {video_url}: {e}", exc_info=True)
+                logger.error("Non-retriable error extracting audio URL for '%s': %s", video_url, e, exc_info=True)
                 return None
 
         logger.error(
-            f"Failed to extract audio URL for {video_url} after {MAX_RETRIES} attempts. Last error: {last_exception}"
+            "Failed to extract audio URL for '%s' after %d attempts.",
+            video_url,
+            MAX_RETRIES,
+            exc_info=last_exception is not None,
         )
         return None

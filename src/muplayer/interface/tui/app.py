@@ -8,10 +8,10 @@ from textual.css.query import NoMatches
 from textual.reactive import reactive
 from textual.widgets import ContentSwitcher
 
+from muplayer.application.config_service import ConfigService
 from muplayer.application.library_service import LibraryService
 from muplayer.application.playback_service import PlaybackService
 from muplayer.application.search_service import SearchService
-from muplayer.infrastructure.config import ConfigManager
 from muplayer.infrastructure.i18n import set_locale
 from muplayer.interface.tui.controllers import NavigationMixin, PlaybackMixin, SearchMixin
 from muplayer.interface.tui.themes import spotify_dark_theme
@@ -49,7 +49,7 @@ class MuPlayer(PlaybackMixin, SearchMixin, NavigationMixin, App[None]):
         playback_service: PlaybackService,
         library_service: LibraryService,
         search_service: SearchService,
-        config_manager: ConfigManager,
+        config_service: ConfigService,
         *args: Any,
         **kwargs: Any,
     ) -> None:
@@ -57,7 +57,7 @@ class MuPlayer(PlaybackMixin, SearchMixin, NavigationMixin, App[None]):
         self.playback_service = playback_service
         self.library_service = library_service
         self.search_service = search_service
-        self.config_manager = config_manager
+        self.config_service = config_service
         self.update_timer = None
 
     def compose(self) -> ComposeResult:
@@ -88,12 +88,12 @@ class MuPlayer(PlaybackMixin, SearchMixin, NavigationMixin, App[None]):
                 self.query_one(Sidebar).playlist_names = []
                 self.query_one(SongList).songs = []
 
-        initial_vol = self.playback_service.set_volume(self.config_manager.config.volume)
+        initial_vol = self.playback_service.set_volume(self.config_service.config.volume)
         with contextlib.suppress(NoMatches):
             self.query_one(MiniPlayer).volume = initial_vol
 
-        set_locale(self.config_manager.config.language)
+        set_locale(self.config_service.config.language)
         self._refresh_ui_translations()
 
-        timer_interval = 5.0 if self.config_manager.config.efficiency_mode else 1.0
+        timer_interval = 5.0 if self.config_service.config.efficiency_mode else 1.0
         self.update_timer = self.set_interval(timer_interval, self._update_playback_progress, pause=True)

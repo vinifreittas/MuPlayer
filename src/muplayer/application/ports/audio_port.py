@@ -20,7 +20,7 @@ class AudioPort(ABC):
         ...
 
     @abstractmethod
-    def get_time(self) -> int:
+    def get_position(self) -> int:
         """Return current playback position in seconds."""
         ...
 

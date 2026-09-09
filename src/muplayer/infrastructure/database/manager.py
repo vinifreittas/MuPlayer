@@ -15,7 +15,7 @@ from muplayer.infrastructure.database.tables import PlaylistSongTable, PlaylistT
 logger = logging.getLogger(__name__)
 
 
-class DatabaseManager(StoragePort):
+class TortoiseStorageAdapter(StoragePort):
     """Acts as a Data Access Layer (DAL) API for the application, managing Tortoise ORM operations."""
 
     def __init__(self, db_path: Path):
@@ -31,18 +31,18 @@ class DatabaseManager(StoragePort):
         try:
             await Tortoise.init(config=self._config)
             await Tortoise.generate_schemas(safe=True)
-            logger.info("💾 Database connection via Tortoise ORM established.")
+            logger.info("Database connection via Tortoise ORM established. Path: %s", self.db_path)
         except Exception as e:
-            logger.error(f"❌ Failed to initialize database: {e}")
+            logger.error("Failed to initialize database at '%s': %s", self.db_path, e, exc_info=True)
             raise
 
     async def disconnect(self) -> None:
         """Safely closes all open database connections."""
         await Tortoise.close_connections()
-        logger.info("💾 Database connections closed.")
+        logger.info("Database connections closed.")
 
-    async def __aenter__(self) -> "DatabaseManager":
-        """Enables async context manager usage: 'async with DatabaseManager(...) as db:'"""
+    async def __aenter__(self) -> "TortoiseStorageAdapter":
+        """Enables async context manager usage: 'async with TortoiseStorageAdapter(...) as storage:'"""
         await self.connect()
         return self
 
@@ -56,11 +56,13 @@ class DatabaseManager(StoragePort):
 
     async def get_playlists(self, limit: int = 50, offset: int = 0) -> list[Playlist]:
         """Retrieves playlists with pagination support, along with their associated songs. (DT-10)"""
+        logger.debug("Fetching playlists (limit=%d, offset=%d).", limit, offset)
         playlists_db = await PlaylistTable.all().offset(offset).limit(limit)
         if not playlists_db:
+            logger.debug("No playlists found in database.")
             return []
 
-        playlist_ids = [p.id for p in playlists_db]
+        playlist_ids = [playlist.id for playlist in playlists_db]
         playlist_songs = (
             await PlaylistSongTable.filter(playlist_id__in=playlist_ids)
             .order_by("playlist_id", "order")
@@ -68,36 +70,38 @@ class DatabaseManager(StoragePort):
         )
 
         grouped_songs: dict[int, list[Song]] = defaultdict(list)
-        for ps in playlist_songs:
-            s = ps.song
-            grouped_songs[ps.playlist_id].append(
+        for entry in playlist_songs:
+            song_record = entry.song
+            grouped_songs[entry.playlist_id].append(
                 Song(
-                    id=s.id,
-                    title=s.title,
-                    artist=s.artist,
-                    album=s.album,
-                    duration=s.duration,
-                    source=s.source,
-                    added_at=ps.added_at,
+                    id=song_record.id,
+                    title=song_record.title,
+                    artist=song_record.artist,
+                    album=song_record.album,
+                    duration=song_record.duration,
+                    source=song_record.source,
+                    added_at=entry.added_at,
                 )
             )
 
         result = []
-        for p in playlists_db:
+        for playlist_record in playlists_db:
             result.append(
                 Playlist(
-                    id=p.id,
-                    name=p.name,
-                    created_at=p.created_at,
-                    songs=grouped_songs.get(p.id, []),
+                    id=playlist_record.id,
+                    name=playlist_record.name,
+                    created_at=playlist_record.created_at,
+                    songs=grouped_songs.get(playlist_record.id, []),
                 )
             )
         return result
 
     async def get_playlist_by_name(self, name: str) -> Playlist | None:
         """Retrieves a single playlist by its unique name, with songs ordered."""
+        logger.debug("Fetching playlist by name: '%s'.", name)
         playlist_db = await PlaylistTable.filter(name=name).first()
         if not playlist_db:
+            logger.debug("Playlist '%s' not found in database.", name)
             return None
 
         playlist_songs = await PlaylistSongTable.filter(playlist=playlist_db).order_by("order").prefetch_related("song")

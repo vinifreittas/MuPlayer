@@ -1,3 +1,3 @@
-from .manager import DatabaseManager
+from .manager import TortoiseStorageAdapter
 
-__all__ = ["DatabaseManager"]
+__all__ = ["TortoiseStorageAdapter"]

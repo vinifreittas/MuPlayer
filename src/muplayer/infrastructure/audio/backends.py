@@ -46,7 +46,7 @@ class PlayerBackend(ABC):
         pass
 
     @abstractmethod
-    def get_time(self) -> int:
+    def get_position(self) -> int:
         """Return the current playback position in whole seconds. Returns 0 if unknown."""
         pass
 
@@ -56,7 +56,7 @@ class PlayerBackend(ABC):
         pass
 
 
-class MpvBackend(PlayerBackend):
+class MPVBackend(PlayerBackend):
     """Adapter for the python-mpv backend."""
 
     @classmethod
@@ -88,17 +88,21 @@ class MpvBackend(PlayerBackend):
 
     @is_paused.setter
     def is_paused(self, value: bool) -> None:
+        current = bool(self._player.pause)
+        logger.debug("MPVBackend.is_paused: %s → %s", current, value)
         self._player.pause = value
 
     def play(self, source: str, user_agent: str | None = None) -> None:
+        logger.debug("MPVBackend.play() called. is_paused before: %s", bool(self._player.pause))
         if user_agent:
             try:
                 self._player["user-agent"] = user_agent
             except Exception as e:
                 logger.warning(f"Failed to set User-Agent on MPV backend: {e}")
         self._player.play(source)
+        logger.debug("MPVBackend.play() dispatched. is_paused after: %s", bool(self._player.pause))
 
-    def get_time(self) -> int:
+    def get_position(self) -> int:
         """Returns current playback position in seconds via MPV's time_pos property."""
         try:
             pos = self._player.time_pos
@@ -110,7 +114,7 @@ class MpvBackend(PlayerBackend):
         self._player.terminate()
 
 
-class VlcBackend(PlayerBackend):
+class VLCBackend(PlayerBackend):
     """Adapter for the python-vlc backend."""
 
     @classmethod
@@ -157,7 +161,7 @@ class VlcBackend(PlayerBackend):
             self._player.set_mrl(source)
             self._player.play()
 
-    def get_time(self) -> int:
+    def get_position(self) -> int:
         """Returns current playback position in seconds via VLC's get_time() (ms → s)."""
         try:
             ms = self._player.get_time()

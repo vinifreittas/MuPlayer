@@ -18,7 +18,7 @@ def is_running_in_venv() -> bool:
     return sys.prefix != sys.base_prefix
 
 
-def check_for_updates(current_ver: str) -> tuple[bool, str, str | None]:
+def check_for_updates(current_version: str) -> tuple[bool, str, str | None]:
     """Queries the GitHub Releases API and compares with the installed version.
 
     Returns:
@@ -43,7 +43,7 @@ def check_for_updates(current_ver: str) -> tuple[bool, str, str | None]:
     except Exception as e:
         return False, "", f"An unexpected error occurred: {e}"
 
-    is_newer = parse_version(latest_tag) > parse_version(current_ver)
+    is_newer = parse_version(latest_tag) > parse_version(current_version)
     return is_newer, latest_tag, None
 
 

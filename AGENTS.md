@@ -66,14 +66,14 @@ src/muplayer/
 │   ├── library_service.py           # Playlist/library management service
 │   ├── playback_service.py          # Playback & queue control logic
 │   ├── search_service.py            # Search orchestration service with caching
-│   └── ports/                       # Abstract protocols (AudioPort, SearchPort, StoragePort, ConfigPort)
+│   └── ports/                       # Abstract protocols (AudioPort, SearchPort, MediaPort, StoragePort, ConfigPort)
 ├── infrastructure/                  # Infrastructure adapters
 │   ├── audio/                       # Audio engine adapter
 │   │   ├── backends.py              # MPVBackend & VLCBackend implementations
-│   │   └── player.py                # PlayerAPI facade & engine selector
+│   │   └── player.py                # AudioPlayerAdapter facade & engine selector
 │   ├── database/                    # Tortoise ORM database adapter
 │   │   ├── config.py                # Tortoise ORM configuration dict
-│   │   ├── manager.py               # DatabaseManager async initialization & CRUD
+│   │   ├── manager.py               # TortoiseStorageAdapter async initialization & CRUD
 │   │   ├── tables.py                # Tortoise ORM models (SongTable, PlaylistTable)
 │   │   └── migrations/              # Aerich migration schema files
 │   ├── system/                      # OS adapters & environment helpers
@@ -81,10 +81,10 @@ src/muplayer/
 │   │   ├── environment_detector.py # Audio engine & terminal capability detector
 │   │   ├── package_updater.py       # Git/pip auto-updater
 │   │   └── paths.py                 # Centralized XDG paths via platformdirs
-│   ├── config.py                    # Config file manager (ConfigManager)
+│   ├── config_manager.py            # Config file manager (ConfigManager)
 │   ├── i18n.py                      # Multilingual support (t(), set_locale)
 │   ├── logging.py                   # Centralized logger setup
-│   └── search.py                    # Search API (yt-dlp wrapper & stream URL extraction)
+│   └── youtube.py                   # YouTubeMediaProvider (yt-dlp wrapper for search & audio stream extraction)
 └── interface/                       # Presentation layer
     ├── cli/                         # Typer CLI framework
     │   └── commands/                # Subcommands (doctor, setup, update, version)
@@ -102,7 +102,7 @@ src/muplayer/
 * **Entry point:** `main.py`
 * **Domain models:** `config.py` | `models.py` | `state.py`
 * **Services:** `playback_service.py` | `library_service.py` | `search_service.py`
-* **Adapters:** `player.py` | `manager.py` | `search.py`
+* **Adapters:** `player.py` | `manager.py` | `youtube.py`
 * **TUI App:** `app.py` | `style.tcss`
 
 ---
@@ -110,9 +110,9 @@ src/muplayer/
 ## ⚙️ 4. Subsystems Overview
 
 1. **Main Component & Composition Root (`main.py`)**: Entry point defining the Typer CLI app. Validates system environment (audio engines, terminal interactive TTY/color capabilities, JavaScript runtime for `yt-dlp`), wires dependency injection, boots the Textual TUI app, and guarantees safe resource teardown (`finally`).
-2. **Audio Subsystem (`infrastructure/audio`)**: `PlayerAPI` wraps `mpv` (`MPVBackend`) with dynamic fallback to `vlc` (`VLCBackend`). Streams via `yt-dlp` extracted audio URLs (1h TTL cached).
-3. **Search Subsystem (`infrastructure/search`)**: `SearchAPI` uses `yt-dlp` to query YouTube videos. Requires a JS runtime (`quickjs`, `node`, `deno`, or `bun`). Results are cached for 5 min by `SearchService`.
-4. **Database (`infrastructure/database`)**: `DatabaseManager` manages async `Tortoise ORM` SQLite schema initialization and CRUD for songs and playlists (`app_data.db`).
+2. **Audio Subsystem (`infrastructure/audio`)**: `AudioPlayerAdapter` wraps `mpv` (`MPVBackend`) with dynamic fallback to `vlc` (`VLCBackend`). Streams via `yt-dlp` extracted audio URLs (1h TTL cached).
+3. **YouTube Media Subsystem (`infrastructure/youtube`)**: `YouTubeMediaProvider` implements `SearchPort` and `MediaPort` using `yt-dlp` to query YouTube videos and extract stream URLs. Requires a JS runtime (`quickjs`, `node`, `deno`, or `bun`). Results are cached by `SearchService` (5 min TTL) and `PlaybackService` (1h TTL).
+4. **Database (`infrastructure/database`)**: `TortoiseStorageAdapter` manages async `Tortoise ORM` SQLite schema initialization and CRUD for songs and playlists (`app_data.db`).
 5. **TUI Application (`interface/tui`)**: `MuPlayer` app inherits from `PlaybackMixin`, `SearchMixin`, and `NavigationMixin`. Uses Textual reactive state properties for UI updates.
 6. **System & Environment (`infrastructure/system`)**: Checks audio engine shared libraries (`libmpv`/`libvlc`), interactive TTY/ANSI terminal capabilities, resolves XDG paths via `platformdirs`, performs package updates, and auto-installs missing packages using system package managers (`apt`, `pacman`, `dnf`, `brew`, `choco`, `scoop`).
 

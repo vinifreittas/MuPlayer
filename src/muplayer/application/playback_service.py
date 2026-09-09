@@ -2,7 +2,7 @@ import logging
 
 import diskcache
 
-from muplayer.application.ports import AudioPort, SearchPort
+from muplayer.application.ports import AudioPort, MediaPort
 from muplayer.domain import QueueState, Song
 
 logger = logging.getLogger(__name__)
@@ -11,14 +11,17 @@ logger = logging.getLogger(__name__)
 class PlaybackService:
     """Gerencia fila, engine de áudio, resolução de mídia e regras de reprodução."""
 
-    def __init__(self, player_api: AudioPort, search_api: SearchPort, cache: diskcache.Cache | None = None) -> None:
-        self.player_api = player_api
-        self.search_api = search_api
+    def __init__(
+        self, audio_player: AudioPort, media_provider: MediaPort, cache: diskcache.Cache | None = None
+    ) -> None:
+        self.audio_player = audio_player
+        self.media_provider = media_provider
         self.cache = cache
+
         self._queue = QueueState()
         self._is_playing: bool = False
         self._is_loading: bool = False
-        self._current_time: int = 0
+        self._current_position: int = 0
 
     # ------------------------------------------------------------------
     # Propriedades de conveniência
@@ -45,8 +48,8 @@ class PlaybackService:
         return self._is_loading
 
     @property
-    def current_time(self) -> int:
-        return self._current_time
+    def current_position(self) -> int:
+        return self._current_position
 
     @property
     def is_shuffling(self) -> bool:
@@ -80,10 +83,10 @@ class PlaybackService:
             self._is_loading = False
             return None
 
-        self.player_api.pause()
+        self.audio_player.pause()
         self._is_playing = False
         self._is_loading = True
-        self._current_time = 0
+        self._current_position = 0
         return selected
 
     # ------------------------------------------------------------------
@@ -97,10 +100,11 @@ class PlaybackService:
         if self.cache:
             cached_url = self.cache.get(cache_key)
             if cached_url and isinstance(cached_url, str):
-                logger.debug(f"Cache hit for audio URL: '{url}'")
+                logger.debug("Cache hit for audio URL: '%s'", url)
                 return cached_url
+            logger.debug("Cache miss for audio URL: '%s'", url)
 
-        audio_url = self.search_api.extract_audio_url(url)
+        audio_url = self.media_provider.extract_audio_url(url)
 
         if audio_url and self.cache:
             self.cache.set(cache_key, audio_url, expire=3600)  # 1 hora TTL
@@ -122,7 +126,7 @@ class PlaybackService:
             self.cache.delete(cache_key)
             logger.debug(f"Invalidated cached audio URL for: '{url}'")
 
-    def prepare_and_play_active(self) -> str:
+    def prepare_and_play_active_song(self) -> str:
         """Extrai a URL e inicia o player. Deve ser executado em thread separada."""
         if not self._queue.active_song or not self._queue.active_song.source:
             self._is_loading = False
@@ -135,15 +139,22 @@ class PlaybackService:
             if not audio_url:
                 self.invalidate_audio_cache(url)
                 self._is_playing = False
+                logger.warning("Could not resolve a playable audio URL for source: '%s'", url)
                 raise RuntimeError("playback_engine_error")
 
-            if self.player_api.play(audio_url):
+            if self.audio_player.play(audio_url):
                 self._is_playing = True
                 return audio_url
             else:
                 self.invalidate_audio_cache(url)
                 self._is_playing = False
+                logger.error("Audio player rejected the stream URL for source: '%s'", url)
                 raise RuntimeError("playback_engine_error")
+        except (ValueError, RuntimeError):
+            raise
+        except Exception as e:
+            logger.error("Unexpected error during playback preparation for '%s': %s", url, e, exc_info=True)
+            raise
         finally:
             self._is_loading = False
 
@@ -152,11 +163,11 @@ class PlaybackService:
             return
 
         if self._queue.active_song:
-            self.player_api.resume()
+            self.audio_player.resume()
             self._is_playing = True
 
     def pause(self) -> None:
-        self.player_api.pause()
+        self.audio_player.pause()
         self._is_playing = False
 
     def toggle_play(self) -> bool:
@@ -171,19 +182,19 @@ class PlaybackService:
         return self._is_playing
 
     # ------------------------------------------------------------------
-    # Volume (fonte da verdade: player_api)
+    # Volume (fonte da verdade: audio_player)
     # ------------------------------------------------------------------
 
     def get_volume(self) -> int:
-        return self.player_api.volume
+        return self.audio_player.volume
 
     def set_volume(self, volume: int) -> int:
         new_vol = max(0, min(100, volume))
-        self.player_api.volume = new_vol
+        self.audio_player.volume = new_vol
         return new_vol
 
     def adjust_volume(self, delta: int) -> int:
-        return self.set_volume(self.player_api.volume + delta)
+        return self.set_volume(self.audio_player.volume + delta)
 
     # ------------------------------------------------------------------
     # Navigation
@@ -195,7 +206,7 @@ class PlaybackService:
 
     def get_prev_index(self) -> int:
         """Retorna o índice da faixa anterior considerando o tempo corrido."""
-        return self._queue.get_prev_index(current_time=self._current_time)
+        return self._queue.get_prev_index(current_time=self._current_position)
 
     # ------------------------------------------------------------------
     # Progress
@@ -203,19 +214,19 @@ class PlaybackService:
 
     def update_progress(self) -> tuple[int, bool]:
         """Atualiza a posição atual de reprodução."""
-        if not self._is_playing or not self._queue.active_song or self.player_api.is_paused:
-            return self._current_time, False
+        if not self._is_playing or not self._queue.active_song or self.audio_player.is_paused:
+            return self._current_position, False
 
-        engine_time = self.player_api.get_time()
+        engine_time = self.audio_player.get_position()
         if engine_time > 0:
-            self._current_time = engine_time
+            self._current_position = engine_time
         else:
-            self._current_time += 1
+            self._current_position += 1
 
         duration = self._queue.active_song.duration
-        if duration > 0 and self._current_time >= duration:
-            self._current_time = 0
+        if duration > 0 and self._current_position >= duration:
+            self._current_position = 0
             self._is_playing = False
             return 0, True
 
-        return self._current_time, False
+        return self._current_position, False

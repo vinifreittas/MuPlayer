@@ -12,8 +12,8 @@ from muplayer.infrastructure.i18n import t
 from muplayer.interface.tui.widgets import MiniPlayer, SearchView, SongList
 
 if TYPE_CHECKING:
+    from muplayer.application.config_service import ConfigService
     from muplayer.application.playback_service import PlaybackService
-    from muplayer.infrastructure.config import ConfigManager
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class PlaybackMixin(MessagePump):
     """Mixin responsible for audio playback control, progress updates, and MiniPlayer events."""
 
     playback_service: PlaybackService
-    config_manager: ConfigManager
+    config_service: ConfigService
     is_playing: bool
     current_time: int
     is_shuffling: bool
@@ -31,34 +31,42 @@ class PlaybackMixin(MessagePump):
 
     def _play_track(self, index: int) -> None:
         """Selects track in service and triggers background worker for audio."""
-        # 1. Atualiza a UI para o estado PAUSADO e zera o tempo instantaneamente
-        self.is_playing = False
-        self.current_time = 0
-
-        # 2. Atualiza a fila e a faixa ativa (o service intercala a parada do player)
+        logger.debug("_play_track(%d): called.", index)
+        # 1. O service para o player e atualiza o estado interno (is_playing, is_loading).
         song = self.playback_service.select_track(index)
         if not song:
+            logger.debug("_play_track(%d): select_track returned None, aborting.", index)
             return
 
-        # 3. Atualiza as informações da nova música no MiniPlayer mantendo-o pausado
+        logger.debug("_play_track(%d): '%s' selected. Syncing UI reactives without watcher.", index, song.title)
+        # 2. Sincroniza os reativos da UI sem acionar o watcher (que chamaria pause() novamente).
+        #    Textual armazena o valor interno do reativo em _reactive_{name}.
+        self._reactive_is_playing = False  # type: ignore[attr-defined]
+        self._reactive_current_time = 0  # type: ignore[attr-defined]
         with contextlib.suppress(NoMatches):
+            self.query_one(MiniPlayer).is_playing = False
             self.query_one(MiniPlayer).current_song = song
+            self.query_one(MiniPlayer).time_elapsed = 0
 
-        # 4. Inicia a thread de carregamento/extração em background
+        # 3. Inicia a thread de carregamento/extração em background
+        logger.debug("_play_track(%d): starting audio worker.", index)
         self._start_audio_worker()
 
     @work(thread=True, exclusive=True)
     def _start_audio_worker(self) -> None:
         """Background thread worker for media loading and playback engine ignition."""
+        logger.debug("Worker: started.")
         try:
-            self.playback_service.prepare_and_play_active()
-            # Sucesso: apenas agora alteramos a UI para "Tocando"
+            self.playback_service.prepare_and_play_active_song()
+            logger.debug("Worker: prepare_and_play succeeded. Scheduling is_playing=True on UI thread.")
             self.call_from_thread(setattr, self, "is_playing", True)
         except ValueError:
+            logger.debug("Worker: ValueError (missing URL). Scheduling is_playing=False on UI thread.")
             self.call_from_thread(self.notify, t("playback_missing_url"), severity="error")
             self.call_from_thread(setattr, self, "is_playing", False)
         except Exception as e:
-            logger.error(f"Playback failed: {e}")
+            logger.error("Playback failed: %s", e, exc_info=True)
+            logger.debug("Worker: Exception caught. Scheduling is_playing=False on UI thread.")
             self.call_from_thread(self.notify, t("playback_engine_error"), severity="error")
             self.call_from_thread(setattr, self, "is_playing", False)
 
@@ -67,6 +75,12 @@ class PlaybackMixin(MessagePump):
     # --------------------------------------------------------------------------
 
     def watch_is_playing(self, is_playing: bool) -> None:
+        logger.debug(
+            "watch_is_playing fired: is_playing=%s. player.is_paused=%s, service._is_loading=%s",
+            is_playing,
+            self.playback_service.audio_player.is_paused,
+            self.playback_service.is_loading,
+        )
         with contextlib.suppress(NoMatches):
             self.query_one(MiniPlayer).is_playing = is_playing
 
@@ -110,13 +124,13 @@ class PlaybackMixin(MessagePump):
         new_vol = self.playback_service.adjust_volume(+5)
         with contextlib.suppress(NoMatches):
             self.query_one(MiniPlayer).volume = new_vol
-        self.config_manager.update(volume=new_vol)
+        self.config_service.update_volume(new_vol)
 
     def action_volume_down(self) -> None:
         new_vol = self.playback_service.adjust_volume(-5)
         with contextlib.suppress(NoMatches):
             self.query_one(MiniPlayer).volume = new_vol
-        self.config_manager.update(volume=new_vol)
+        self.config_service.update_volume(new_vol)
 
     def action_next_track(self) -> None:
         self._handle_next_track()

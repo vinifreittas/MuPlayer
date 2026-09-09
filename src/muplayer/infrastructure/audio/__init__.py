@@ -1,4 +1,4 @@
-from .backends import PlayerBackend
-from .player import PlayerAPI
+from .backends import MPVBackend, PlayerBackend, VLCBackend
+from .player import AudioPlayerAdapter
 
-__all__ = ["PlayerAPI", "PlayerBackend"]
+__all__ = ["AudioPlayerAdapter", "MPVBackend", "PlayerBackend", "VLCBackend"]

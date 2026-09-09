@@ -15,9 +15,9 @@ app = typer.Typer()
 def update_cmd() -> None:
     """Update the program to the latest version."""
     typer.echo("Checking for the latest version on GitHub...")
-    current_ver = get_version()
+    current_version = get_version()
 
-    if "dev" in current_ver:
+    if "dev" in current_version:
         typer.secho("You are running a local development version. Update skipped.", fg="yellow")
         return
 
@@ -26,17 +26,17 @@ def update_cmd() -> None:
         if not typer.confirm("Continue anyway?", default=False):
             raise typer.Exit()
 
-    is_newer, latest_tag, error = check_for_updates(current_ver)
+    is_newer, latest_tag, error = check_for_updates(current_version)
 
     if error:
         typer.secho(error, fg="red")
         raise typer.Exit(code=1)
 
     if not is_newer:
-        typer.secho(f"You are already up to date! (v{current_ver})", fg="green")
+        typer.secho(f"You are already up to date! (v{current_version})", fg="green")
         return
 
-    typer.echo(f"A new version is available: v{latest_tag} (Current: v{current_ver})")
+    typer.echo(f"A new version is available: v{latest_tag} (Current: v{current_version})")
     if not typer.confirm("Would you like to update now?"):
         typer.echo("Update aborted.")
         return

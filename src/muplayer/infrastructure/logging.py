@@ -8,6 +8,9 @@ from textual.logging import TextualHandler
 
 LOG_BACKUPS = int(os.getenv("APP_LOG_BACKUPS", "5"))
 
+# External libraries that produce noisy INFO/DEBUG output irrelevant to MuPlayer diagnostics.
+_NOISY_EXTERNAL_LOGGERS = ["yt_dlp", "tortoise", "asyncio", "httpx", "urllib3", "charset_normalizer"]
+
 
 def setup_logging(log_dir: Path, log_level: int = logging.INFO) -> logging.Logger:
     """Configures daily date-based log files and caps the total log count."""
@@ -29,11 +32,15 @@ def setup_logging(log_dir: Path, log_level: int = logging.INFO) -> logging.Logge
     root_logger = logging.getLogger()
     root_logger.setLevel(log_level)
 
-    # 3. Textual UI Handler Idempotency
+    # 3. Silence noisy external loggers — keep WARNING and above only
+    for lib in _NOISY_EXTERNAL_LOGGERS:
+        logging.getLogger(lib).setLevel(logging.WARNING)
+
+    # 4. Textual UI Handler Idempotency
     if not any(isinstance(h, TextualHandler) for h in root_logger.handlers):
         root_logger.addHandler(TextualHandler())
 
-    # 4. Smart File Handler Management
+    # 5. Smart File Handler Management
     file_handler_exists = False
     for handler in list(root_logger.handlers):
         if isinstance(handler, logging.FileHandler):
@@ -45,10 +52,11 @@ def setup_logging(log_dir: Path, log_level: int = logging.INFO) -> logging.Logge
 
     if not file_handler_exists:
         log_format = logging.Formatter(
-            "[%(asctime)s] %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+            "[%(asctime)s] %(levelname)-8s [%(name)s:%(lineno)d] %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
         )
         file_handler = logging.FileHandler(log_file, encoding="utf-8")
         file_handler.setFormatter(log_format)
         root_logger.addHandler(file_handler)
 
+    root_logger.debug("Logging initialized. File: %s | Level: %s", log_file, logging.getLevelName(log_level))
     return root_logger

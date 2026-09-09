@@ -1,7 +1,4 @@
-import pytest
-from pydantic import ValidationError
-
-from muplayer.domain import AppConfig, Playlist, QueueState, Song
+from muplayer.domain import Playlist, QueueState, Song
 
 
 def test_song_methods():
@@ -75,20 +72,3 @@ def test_queue_state_methods():
     assert queue.songs == []
     assert queue.current_index == -1
     assert queue.active_song is None
-
-
-def test_app_config_methods():
-    """Valida os métodos e propriedades da entidade AppConfig."""
-    config = AppConfig(language="pt", efficiency_mode=False)
-    assert config.is_portuguese is True
-    assert config.toggle_efficiency_mode() is True
-    assert config.efficiency_mode is True
-
-    config_en = AppConfig(language="en")
-    assert config_en.is_portuguese is False
-
-    with pytest.raises(ValidationError):
-        AppConfig(language="fr")
-
-    with pytest.raises(ValidationError):
-        AppConfig(volume=150)

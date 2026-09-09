@@ -60,15 +60,15 @@ def main(
     # Lazy-load dependencies to keep '--help' and CLI subcommands fast
     import diskcache
 
+    from muplayer.application.config_service import ConfigService
     from muplayer.application.library_service import LibraryService
     from muplayer.application.playback_service import PlaybackService
     from muplayer.application.search_service import SearchService
-    from muplayer.infrastructure.audio import PlayerAPI
-    from muplayer.infrastructure.config import ConfigManager
-    from muplayer.infrastructure.database import DatabaseManager
+    from muplayer.infrastructure.audio import AudioPlayerAdapter
+    from muplayer.infrastructure.config_manager import ConfigManager
+    from muplayer.infrastructure.database import TortoiseStorageAdapter
     from muplayer.infrastructure.i18n import set_locale
     from muplayer.infrastructure.logging import setup_logging
-    from muplayer.infrastructure.search import SearchAPI
     from muplayer.infrastructure.system import (
         check_engines,
         check_terminal_support,
@@ -78,6 +78,7 @@ def main(
         get_default_browser,
         get_log_dir,
     )
+    from muplayer.infrastructure.youtube import YouTubeMediaProvider
     from muplayer.interface.tui.app import MuPlayer
 
     # 1. Logging & Environment Validation
@@ -88,23 +89,24 @@ def main(
     # 2. Setup Configuration
     data_dir = get_data_dir()
     config_manager = ConfigManager(config_path=data_dir / "config.json")
-    set_locale(config_manager.config.language)
+    config_service = ConfigService(config_port=config_manager)
+    set_locale(config_service.config.language)
 
     # 3. Bootstrapping & Resource Management
-    player_api = search_api = db = cache = None
+    audio_player = youtube_provider = storage = cache = None
 
     try:
         cache = diskcache.Cache(str(get_cache_dir()))
-        db = DatabaseManager(db_path=data_dir / "app_data.db")
+        storage = TortoiseStorageAdapter(db_path=data_dir / "app_data.db")
         player_engine = "mpv" if engines.get("mpv") else "vlc"
-        player_api = PlayerAPI(engine=player_engine)
-        search_api = SearchAPI(js_runtime=detect_js_runtime(), browser=get_default_browser())
+        audio_player = AudioPlayerAdapter(engine=player_engine)
+        youtube_provider = YouTubeMediaProvider(js_runtime=detect_js_runtime(), browser=get_default_browser())
 
         app = MuPlayer(
-            playback_service=PlaybackService(player_api, search_api, cache),
-            library_service=LibraryService(db),
-            search_service=SearchService(search_api, cache),
-            config_manager=config_manager,
+            playback_service=PlaybackService(audio_player, youtube_provider, cache),
+            library_service=LibraryService(storage),
+            search_service=SearchService(youtube_provider, cache),
+            config_service=config_service,
         )
         app.run()
 
@@ -114,12 +116,12 @@ def main(
     except Exception as e:
         _fail(f"Fatal error starting MuPlayer: {e}")
     finally:
-        if player_api:
-            player_api.close()
-        if search_api:
-            search_api.close()
-        if db:
-            asyncio.run(db.disconnect())
+        if audio_player:
+            audio_player.close()
+        if youtube_provider:
+            youtube_provider.close()
+        if storage:
+            asyncio.run(storage.disconnect())
         if cache:
             cache.close()
 
