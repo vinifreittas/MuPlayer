@@ -3,11 +3,14 @@ import shutil
 import subprocess
 import sys
 from ctypes.util import find_library
+from pathlib import Path
 
 import installed_browsers
 
+from muplayer.infrastructure.system.paths import get_bin_dir, get_libs_dir
+
 # Supported JS runtimes by yt-dlp, in preferred detection order.
-_JS_RUNTIME_CANDIDATES: list[str] = ["quickjs", "node", "deno", "bun"]
+_JS_RUNTIME_CANDIDATES: list[str] = ["quickjs", "qjs", "node", "deno", "bun"]
 
 
 def get_version() -> str:
@@ -18,9 +21,26 @@ def get_version() -> str:
         return "0.0.1 (local/dev)"
 
 
+def _check_local_lib(engine_name: str) -> str | None:
+    """Checks for engine shared library files in the user's local libs directory."""
+    libs_dir = get_libs_dir()
+    patterns = {
+        "mpv": ["*mpv*.dll", "*mpv*.so*", "*mpv*.dylib"],
+        "vlc": ["*vlc*.dll", "*vlc*.so*", "*vlc*.dylib"],
+    }
+    for pattern in patterns.get(engine_name, []):
+        matches = list(libs_dir.glob(pattern))
+        if matches:
+            return str(matches[0])
+    return None
+
+
 def check_engines() -> dict[str, str | None]:
-    """Checks if mpv or vlc shared libraries are present on the system."""
-    return {"mpv": find_library("mpv"), "vlc": find_library("vlc")}
+    """Checks if mpv or vlc shared libraries are present on the system or in user libs dir."""
+    return {
+        "mpv": find_library("mpv") or _check_local_lib("mpv"),
+        "vlc": find_library("vlc") or _check_local_lib("vlc"),
+    }
 
 
 def get_engine_version(engine_name: str) -> str | None:
@@ -98,14 +118,24 @@ def get_default_browser() -> str:
 
 
 def detect_js_runtime() -> dict[str, dict] | None:
-    """Detects the first available JavaScript runtime on the system PATH.
+    """Detects the first available JavaScript runtime on PATH or local bin directory.
 
-    Probes candidates in order: node → quickjs → deno → bun.
-    Returns a yt-dlp-compatible ``js_runtimes`` dict, e.g. ``{'node': {}}``,
-    or ``None`` if none is found (yt-dlp will then use its own default).
+    Probes candidates in order: quickjs → qjs → node → deno → bun.
+    Returns a yt-dlp-compatible ``js_runtimes`` dict, e.g. ``{'quickjs': {'path': '/path/to/qjs'}}``,
+    or ``None`` if none is found.
     """
+    bin_dir = get_bin_dir()
     for runtime in _JS_RUNTIME_CANDIDATES:
         path = shutil.which(runtime)
         if path:
-            return {runtime: {}}
+            key = "quickjs" if runtime in ("quickjs", "qjs") else runtime
+            return {key: {"path": path}}
+
+        # Check local user bin directory
+        for ext in ("", ".exe"):
+            local_bin = Path(bin_dir) / f"{runtime}{ext}"
+            if local_bin.is_file():
+                key = "quickjs" if runtime in ("quickjs", "qjs") else runtime
+                return {key: {"path": str(local_bin)}}
+
     return None

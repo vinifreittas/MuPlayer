@@ -4,10 +4,18 @@ This document provides high-level architectural context, coding conventions, rep
 
 ---
 
-## 📌 1. Project Overview & Tech Stack
+## 📌 1. Project Overview & Product Vision
 
-**MuPlayer** is a lightweight, efficient terminal-based audio player (TUI) streaming YouTube audio.
+**MuPlayer** is a lightweight, efficient terminal-based audio player (TUI) streaming YouTube audio. It is designed specifically for developers and terminal power users who want a clean, fast, distraction-free listening experience without keeping a web browser open.
 
+### Core Product Scope & Principles
+* **Primary Scope:** Pure YouTube streaming via `yt-dlp` (search, stream URL extraction, public playlist URL import).
+* **CLI vs TUI Boundary:** The CLI (Typer) is strictly for diagnostics, setup, and package maintenance (`setup`, `doctor`, `update`, `version`). The listening, queueing, and media playback UX is 100% contained inside the Textual TUI.
+* **Local Library Scope:** SQLite persistence (Tortoise ORM) for user custom playlists, saved/favorite tracks, and play history.
+* **Caching & Memory Policy:** Fast disk cache (`~/.cache/MuPlayer/`) for search queries (5 min TTL) and stream URLs (1h TTL). Audio is streamed in-memory without mandatory local media files.
+* **Future Extension Roadmap:** An optional offline audio downloading mode may be added to `domain/application/infrastructure` without violating Clean Architecture boundaries.
+
+### Tech Stack
 * **Language:** Python >= 3.12 (managed via `uv`)
 * **TUI Interface:** [Textual](https://textualize.io) (CSS-styled, reactive widgets, screens, themes)
 * **CLI Framework:** [Typer](https://typer.tiangolo.com) + [Rich](https://rich.readthedocs.io)
@@ -79,7 +87,7 @@ src/muplayer/
 │   ├── system/                      # OS adapters & environment helpers
 │   │   ├── engine_installer.py      # System package manager auto-installer (apt, brew, pacman, etc.)
 │   │   ├── environment_detector.py # Audio engine & terminal capability detector
-│   │   ├── package_updater.py       # Git/pip auto-updater
+│   │   ├── package_updater.py       # Git/uv auto-updater
 │   │   └── paths.py                 # Centralized XDG paths via platformdirs
 │   ├── config_manager.py            # Config file manager (ConfigManager)
 │   ├── i18n.py                      # Multilingual support (t(), set_locale)

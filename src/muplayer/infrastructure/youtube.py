@@ -64,10 +64,8 @@ class YouTubeMediaProvider(SearchPort, MediaPort):
     def close(self) -> None:
         """Encerra e limpa os recursos das instâncias do yt-dlp."""
         try:
-            if hasattr(self, "_search_ydl"):
-                self._search_ydl.close()
-            if hasattr(self, "_extractor_ydl"):
-                self._extractor_ydl.close()
+            self._search_ydl.close()
+            self._extractor_ydl.close()
             logger.debug("YouTubeMediaProvider closed cleanly.")
         except Exception as e:
             logger.warning(f"Error closing YoutubeDL instances: {e}")

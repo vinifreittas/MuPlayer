@@ -58,6 +58,10 @@ def main(
         return
 
     # Lazy-load dependencies to keep '--help' and CLI subcommands fast
+    # 1. Environment Path Setup
+    import contextlib
+    import os
+
     import diskcache
 
     from muplayer.application.config_service import ConfigService
@@ -73,15 +77,27 @@ def main(
         check_engines,
         check_terminal_support,
         detect_js_runtime,
+        get_bin_dir,
         get_cache_dir,
         get_data_dir,
         get_default_browser,
+        get_libs_dir,
         get_log_dir,
     )
     from muplayer.infrastructure.youtube import YouTubeMediaProvider
     from muplayer.interface.tui.app import MuPlayer
 
-    # 1. Logging & Environment Validation
+    bin_dir = str(get_bin_dir())
+    if bin_dir not in os.environ.get("PATH", ""):
+        os.environ["PATH"] = f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}"
+
+    if hasattr(os, "add_dll_directory"):
+        libs_dir = get_libs_dir()
+        if libs_dir.is_dir():
+            with contextlib.suppress(Exception):
+                os.add_dll_directory(str(libs_dir))
+
+    # 2. Logging & Environment Validation
     setup_logging(log_dir=get_log_dir(), log_level=logging.DEBUG if debug else logging.INFO)
     engines = check_engines()
     _validate_environment(force, engines, check_terminal_support, detect_js_runtime)

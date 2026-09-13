@@ -129,6 +129,7 @@ class VLCBackend(PlayerBackend):
     def __init__(self) -> None:
         import vlc
 
+        self._vlc = vlc
         self._instance = vlc.Instance("--no-video --quiet")
         self._player = self._instance.media_player_new()
         logger.debug("VLC backend initialized.")
@@ -143,9 +144,7 @@ class VLCBackend(PlayerBackend):
 
     @property
     def is_paused(self) -> bool:
-        import vlc
-
-        return self._player.get_state() == vlc.State.Paused
+        return self._player.get_state() == self._vlc.State.Paused
 
     @is_paused.setter
     def is_paused(self, value: bool) -> None:

@@ -1,4 +1,3 @@
-import json
 import logging
 from pathlib import Path
 
@@ -16,9 +15,7 @@ class ConfigManager(ConfigPort):
     def load(self) -> AppConfig:
         if self.config_path.exists():
             try:
-                with open(self.config_path, encoding="utf-8") as f:
-                    data = json.load(f)
-                    return AppConfig.model_validate(data)
+                return AppConfig.model_validate_json(self.config_path.read_text(encoding="utf-8"))
             except Exception as e:
                 logger.error("Failed to load config from '%s': %s", self.config_path, e, exc_info=True)
 
@@ -27,8 +24,7 @@ class ConfigManager(ConfigPort):
 
     def save(self) -> None:
         try:
-            with open(self.config_path, "w", encoding="utf-8") as f:
-                json.dump(self.config.model_dump(), f, indent=4)
+            self.config_path.write_text(self.config.model_dump_json(indent=4), encoding="utf-8")
         except Exception as e:
             logger.error("Failed to save config to '%s': %s", self.config_path, e, exc_info=True)
 

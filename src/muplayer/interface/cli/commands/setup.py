@@ -38,51 +38,19 @@ def setup_cmd() -> None:
     has_audio = bool(engines["mpv"] or engines["vlc"])
 
     if not has_audio or typer.confirm(
-        "Would you like to configure/install an audio engine (mpv/vlc)?", default=not has_audio
+        "Would you like to install the standard MPV audio engine?", default=not has_audio
     ):
-
-        def _validate_engine_choice(val: str) -> str:
-            choice = val.strip().lower()
-            if choice not in ("mpv", "vlc"):
-                raise typer.BadParameter("Engine must be 'mpv' or 'vlc'.")
-            return choice
-
-        choice = typer.prompt(
-            "Which audio engine would you like to set up? (mpv/vlc)",
-            default="mpv",
-            value_proc=_validate_engine_choice,
-        )
-
-        if typer.confirm(f"Would you like me to install {choice.upper()} now?"):
-            success, message = install_engine(choice)
-            if success:
-                typer.secho(message, fg="green")
-            else:
-                typer.secho(
-                    message, fg="red" if "failed" in message.lower() or "error" in message.lower() else "yellow"
-                )
+        success, message = install_engine("mpv")
+        if success:
+            typer.secho(message, fg="green")
+        else:
+            typer.secho(message, fg="red" if "failed" in message.lower() or "error" in message.lower() else "yellow")
 
     if not js_runtime or typer.confirm(
-        "Would you like to install a JavaScript runtime (quickjs/node)?", default=not js_runtime
+        "Would you like to install the QuickJS JavaScript engine?", default=not js_runtime
     ):
-
-        def _validate_js_choice(val: str) -> str:
-            choice = val.strip().lower()
-            if choice not in ("quickjs", "node", "nodejs"):
-                raise typer.BadParameter("JS engine choice must be 'quickjs' or 'node'.")
-            return choice
-
-        js_choice = typer.prompt(
-            "Which JavaScript runtime would you like to set up? (quickjs/node)",
-            default="quickjs",
-            value_proc=_validate_js_choice,
-        )
-
-        if typer.confirm(f"Would you like me to install {js_choice.upper()} now?"):
-            success, message = install_engine(js_choice)
-            if success:
-                typer.secho(message, fg="green")
-            else:
-                typer.secho(
-                    message, fg="red" if "failed" in message.lower() or "error" in message.lower() else "yellow"
-                )
+        success, message = install_engine("quickjs")
+        if success:
+            typer.secho(message, fg="green")
+        else:
+            typer.secho(message, fg="red" if "failed" in message.lower() or "error" in message.lower() else "yellow")

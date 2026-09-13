@@ -4,18 +4,18 @@
 - [X] Checagem de compatibilidade do terminal (TTY, cores, dimensões)
 - [X] Internacionalização / i18n (`pt-BR`, `en-US` via `i18n.py` e seletor na TUI)
 - [X] CLI & Diagnóstico (`muplayer setup`, `doctor`, `update`, `version`)
-- [X] Validação de Pre-flight & Composition Root (`bootstrap.py`, detecção de JS runtime para `yt-dlp`)
+- [X] Validação de Pre-flight & Composition Root (`main.py`, detecção de JS runtime para `yt-dlp`)
 - [X] Suporte a XDG Standard (`platformdirs`) e Cache em disco (`diskcache`)
-- [/] Sistema de playlists (Backend/ORM completo; criação e adição via UI prontos, remoção/exclusão na TUI pendentes)
-- [ ] Modo Eficiência (Implementação completa de economia de recursos)
-- [ ] Histórico de reprodução (Model/Tabela e histórico de faixas tocadas)
-- [ ] Suíte de testes (`pytest` e `pytest-asyncio`)
+- [X] Suíte de testes (`pytest` e `pytest-asyncio`)
+- [/] Sistema de playlists (Backend/ORM completo; criação e adição na UI prontos, exclusão pendente)
+- [ ] Modo Eficiência (Economia de recursos no terminal)
+- [ ] Histórico de reprodução (Registro de faixas tocadas)
 
 ## 🔧 Otimizações
-- [ ] Otimização do uso de memória
-- [ ] Otimização do uso de CPU
-- [ ] Otimização da experiência de uso (UX/TUI)
+- [ ] Otimização do uso de memória e CPU
+- [ ] Refinamento da experiência de uso (UX/TUI)
 
-## 📚 Documentação
-- [X] Documentação do projeto (`README.md` atualizado com comandos CLI e requisitos)
-- [X] Diretrizes de desenvolvimento para IA (`AGENTS.md` com mapa do projeto e arquitetura)
+## 📚 Documentação & Futuro
+- [X] Documentação do projeto (`README.md` e `AGENTS.md`)
+- [ ] Importação de playlists públicas do YouTube via URL (Futuro v1.1.0)
+- [ ] Modo offline opcional com download de faixas (Futuro v1.2.0)

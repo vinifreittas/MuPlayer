@@ -19,25 +19,32 @@ APP_NAME = "MuPlayer"
 APP_AUTHOR = "vinifreittas"
 
 
-def get_data_dir() -> Path:
-    """Returns the platform-appropriate directory for persistent app data (DB, config)."""
-    path = Path(user_data_dir(APP_NAME, APP_AUTHOR))
+def _ensure_dir(path: Path) -> Path:
     with contextlib.suppress(OSError):
         path.mkdir(parents=True, exist_ok=True)
     return path
+
+
+def get_data_dir() -> Path:
+    """Returns the platform-appropriate directory for persistent app data (DB, config)."""
+    return _ensure_dir(Path(user_data_dir(APP_NAME, APP_AUTHOR)))
 
 
 def get_log_dir() -> Path:
     """Returns the platform-appropriate directory for application log files."""
-    path = Path(user_log_dir(APP_NAME, APP_AUTHOR))
-    with contextlib.suppress(OSError):
-        path.mkdir(parents=True, exist_ok=True)
-    return path
+    return _ensure_dir(Path(user_log_dir(APP_NAME, APP_AUTHOR)))
 
 
 def get_cache_dir() -> Path:
     """Returns the platform-appropriate directory for disk cache storage."""
-    path = Path(user_cache_dir(APP_NAME, APP_AUTHOR))
-    with contextlib.suppress(OSError):
-        path.mkdir(parents=True, exist_ok=True)
-    return path
+    return _ensure_dir(Path(user_cache_dir(APP_NAME, APP_AUTHOR)))
+
+
+def get_bin_dir() -> Path:
+    """Returns the platform-appropriate directory for user executable binaries."""
+    return _ensure_dir(get_data_dir() / "bin")
+
+
+def get_libs_dir() -> Path:
+    """Returns the platform-appropriate directory for user shared libraries."""
+    return _ensure_dir(get_data_dir() / "libs")

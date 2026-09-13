@@ -1,0 +1,63 @@
+name: Release Assets Publisher
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  bundle-assets:
+    name: Bundle precompiled assets
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Install 7zip
+        run: choco install 7zip -y
+        shell: pwsh
+
+      - name: Download qjs binaries from quickjs-ng latest release
+        shell: pwsh
+        run: |
+          $release = Invoke-RestMethod "https://api.github.com/repos/quickjs-ng/quickjs/releases/latest"
+          $assets = $release.assets
+
+          $targets = @(
+            @{ keyword = "qjs-linux-x86_64";    outname = "qjs-linux-x86_64"         },
+            @{ keyword = "qjs-macos-x86_64";    outname = "qjs-macos-x86_64"         },
+            @{ keyword = "qjs-macos-arm64";      outname = "qjs-macos-arm64"          },
+            @{ keyword = "qjs-windows-x86_64";  outname = "qjs-windows-x86_64.exe"   }
+          )
+
+          foreach ($t in $targets) {
+            $asset = $assets | Where-Object { $_.name -like "*$($t.keyword)*" } | Select-Object -First 1
+            if ($asset) {
+              Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $t.outname
+              Write-Host "Downloaded $($t.outname)"
+            } else {
+              Write-Warning "Asset not found: $($t.keyword)"
+            }
+          }
+
+      - name: Download libmpv-2.dll from mpv-winbuild-cmake latest release
+        shell: pwsh
+        run: |
+          $release = Invoke-RestMethod "https://api.github.com/repos/shinchiro/mpv-winbuild-cmake/releases/latest"
+          $asset = $release.assets | Where-Object { $_.name -like "mpv-dev-x86_64-*.7z" -and $_.name -notlike "*-v3-*" } | Select-Object -First 1
+          if ($asset) {
+            Invoke-WebRequest -Uri $asset.browser_download_url -OutFile mpv-dev.7z
+            & "C:\Program Files\7-Zip\7z.exe" e mpv-dev.7z libmpv-2.dll -y
+            Write-Host "Extracted libmpv-2.dll"
+          } else {
+            Write-Error "mpv-dev asset not found"
+          }
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            qjs-linux-x86_64
+            qjs-macos-x86_64
+            qjs-macos-arm64
+            qjs-windows-x86_64.exe
+            libmpv-2.dll

@@ -107,7 +107,6 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
 }
 
 _active_locale: str = "en"
-_active_strings: dict[str, str] = _TRANSLATIONS["en"]
 
 
 @lru_cache(maxsize=512)
@@ -120,9 +119,8 @@ def set_locale(language_code: str) -> None:
     """
     Set the active translation locale. Falls back to 'en' for unsupported codes.
     """
-    global _active_locale, _active_strings
+    global _active_locale
     _active_locale = language_code if language_code in _TRANSLATIONS else "en"
-    _active_strings = _TRANSLATIONS[_active_locale]
 
 
 def t(key: str, **kwargs: Any) -> str:

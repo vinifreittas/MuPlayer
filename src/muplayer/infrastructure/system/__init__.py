@@ -18,8 +18,10 @@ from muplayer.infrastructure.system.package_updater import (
     perform_update,
 )
 from muplayer.infrastructure.system.paths import (
+    get_bin_dir,
     get_cache_dir,
     get_data_dir,
+    get_libs_dir,
     get_log_dir,
 )
 
@@ -28,11 +30,13 @@ __all__ = [
     "check_for_updates",
     "check_terminal_support",
     "detect_js_runtime",
+    "get_bin_dir",
     "get_cache_dir",
     "get_data_dir",
     "get_default_browser",
     "get_detected_os",
     "get_engine_version",
+    "get_libs_dir",
     "get_log_dir",
     "get_package_manager",
     "get_terminal_dimensions",
