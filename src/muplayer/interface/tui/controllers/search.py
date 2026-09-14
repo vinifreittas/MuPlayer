@@ -9,6 +9,7 @@ from textual.css.query import NoMatches
 from textual.message_pump import MessagePump
 
 from muplayer.infrastructure.i18n import t
+from muplayer.interface.tui.controllers.base import safe_call_from_thread
 from muplayer.interface.tui.widgets import Header, SearchView
 
 if TYPE_CHECKING:
@@ -31,15 +32,15 @@ class SearchMixin(MessagePump):
 
     @work(thread=True, exclusive=True)
     def _execute_search_worker(self, query: str) -> None:
-        self.call_from_thread(self._set_loading, True)
+        safe_call_from_thread(self, self._set_loading, True)
         try:
             limit = self.config_service.config.search_limit
             results = self.search_service.search(query, limit=limit)
-            self.call_from_thread(self._apply_search_results, query, results)
+            safe_call_from_thread(self, self._apply_search_results, query, results)
         except Exception as e:
             logger.error("Search failed for query '%s': %s", query, e, exc_info=True)
-            self.call_from_thread(self._set_loading, False)
-            self.call_from_thread(self.notify, t("search_network_error", query=query), severity="error")
+            safe_call_from_thread(self, self._set_loading, False)
+            safe_call_from_thread(self, self.notify, t("search_network_error", query=query), severity="error")
 
     def _set_loading(self, is_loading: bool) -> None:
         with contextlib.suppress(Exception):

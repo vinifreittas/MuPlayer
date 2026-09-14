@@ -9,6 +9,7 @@ from textual.css.query import NoMatches
 from textual.message_pump import MessagePump
 
 from muplayer.infrastructure.i18n import t
+from muplayer.interface.tui.controllers.base import safe_call_from_thread
 from muplayer.interface.tui.widgets import MiniPlayer, SearchView, SongList
 
 if TYPE_CHECKING:
@@ -59,16 +60,16 @@ class PlaybackMixin(MessagePump):
         try:
             self.playback_service.prepare_and_play_active_song()
             logger.debug("Worker: prepare_and_play succeeded. Scheduling is_playing=True on UI thread.")
-            self.call_from_thread(setattr, self, "is_playing", True)
+            safe_call_from_thread(self, setattr, self, "is_playing", True)
         except ValueError:
             logger.debug("Worker: ValueError (missing URL). Scheduling is_playing=False on UI thread.")
-            self.call_from_thread(self.notify, t("playback_missing_url"), severity="error")
-            self.call_from_thread(setattr, self, "is_playing", False)
+            safe_call_from_thread(self, self.notify, t("playback_missing_url"), severity="error")
+            safe_call_from_thread(self, setattr, self, "is_playing", False)
         except Exception as e:
             logger.error("Playback failed: %s", e, exc_info=True)
             logger.debug("Worker: Exception caught. Scheduling is_playing=False on UI thread.")
-            self.call_from_thread(self.notify, t("playback_engine_error"), severity="error")
-            self.call_from_thread(setattr, self, "is_playing", False)
+            safe_call_from_thread(self, self.notify, t("playback_engine_error"), severity="error")
+            safe_call_from_thread(self, setattr, self, "is_playing", False)
 
     # --------------------------------------------------------------------------
     # REACTIVE WATCHERS
