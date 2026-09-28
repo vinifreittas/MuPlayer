@@ -10,7 +10,7 @@ from tortoise.transactions import in_transaction
 from muplayer.application.ports import StoragePort
 from muplayer.domain import Playlist, Song
 from muplayer.infrastructure.database.config import get_tortoise_config
-from muplayer.infrastructure.database.tables import PlaylistSongTable, PlaylistTable, SongTable
+from muplayer.infrastructure.database.tables import HistoryTable, PlaylistSongTable, PlaylistTable, SongTable
 
 logger = logging.getLogger(__name__)
 
@@ -195,3 +195,10 @@ class TortoiseStorageAdapter(StoragePort):
 
         logger.info(f"Song at index {song_index} removed from playlist '{playlist_name}'. Positions compacted.")
         return True
+
+    async def add_to_history(self, song: Song) -> None:
+        await HistoryTable.create(song_title=song.title, song_artist=song.artist, source=song.source)
+
+    async def get_history(self, limit: int = 50) -> list[Song]:
+        rows = await HistoryTable.all().limit(limit)
+        return [Song(title=r.song_title, artist=r.song_artist, source=r.source) for r in rows]

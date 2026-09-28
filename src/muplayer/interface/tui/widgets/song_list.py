@@ -17,6 +17,8 @@ class SongList(Vertical):
     """Isolated Widget responsible for listing the tracks of the selected playlist."""
 
     songs = reactive[list[Song]]([])
+    title: reactive[str] = reactive("")
+    show_header: reactive[bool] = reactive(True)
 
     class SongSelected(Message):
         def __init__(self, song: Song, context_songs: list[Song]):
@@ -39,8 +41,16 @@ class SongList(Vertical):
     def update_translations(self) -> None:
         """Update static label texts to match current locale."""
         with contextlib.suppress(NoMatches):
-            self.query_one("#songs-header-title", Label).update(t("songs_title"))
+            self.query_one("#songs-header-title", Label).update(self.title or t("songs_title"))
             self.query_one("#play-all-btn", Button).label = t("play_all_btn")
+
+    def watch_title(self, title: str) -> None:
+        with contextlib.suppress(NoMatches):
+            self.query_one("#songs-header-title", Label).update(title or t("songs_title"))
+
+    def watch_show_header(self, show: bool) -> None:
+        with contextlib.suppress(NoMatches):
+            self.query_one("#content-header").display = show
 
     def watch_songs(self, songs: list[Song]) -> None:
         song_listview = self.query_one("#song-playlist", ListView)

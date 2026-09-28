@@ -21,12 +21,15 @@ class Sidebar(Vertical):
             super().__init__()
             self.name = name
 
+    class HistoryRequested(Message):
+        pass
+
     def compose(self) -> ComposeResult:
         yield Label(t("sidebar_library"), id="lib-title", classes="section-title")
         with ListView(id="library-list"):
             yield ListItem(Label(t("sidebar_home")), id="item-home")
             yield ListItem(Label(t("sidebar_discover")), id="item-discover")
-            yield ListItem(Label(t("sidebar_radio")), id="item-radio")
+            yield ListItem(Label(t("sidebar_history")), id="item-history")
 
         yield Label(t("sidebar_playlists"), id="pl-title", classes="section-title")
         yield ListView(id="playlist-items")
@@ -37,7 +40,7 @@ class Sidebar(Vertical):
             self.query_one("#lib-title", Label).update(t("sidebar_library"))
             self.query_one("#item-home Label", Label).update(t("sidebar_home"))
             self.query_one("#item-discover Label", Label).update(t("sidebar_discover"))
-            self.query_one("#item-radio Label", Label).update(t("sidebar_radio"))
+            self.query_one("#item-history Label", Label).update(t("sidebar_history"))
             self.query_one("#pl-title", Label).update(t("sidebar_playlists"))
 
     def watch_playlist_names(self, playlist_names: list[str]):
@@ -53,3 +56,8 @@ class Sidebar(Vertical):
             with contextlib.suppress(NoMatches):
                 playlist_name = str(event.item.query_one(Label).renderable)
                 self.post_message(self.PlaylistSelected(playlist_name))
+
+    @on(ListView.Selected, "#library-list")
+    def _on_library_item_click(self, event: ListView.Selected) -> None:
+        if event.item.id == "item-history":
+            self.post_message(self.HistoryRequested())

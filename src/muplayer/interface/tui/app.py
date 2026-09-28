@@ -95,5 +95,4 @@ class MuPlayer(PlaybackMixin, SearchMixin, NavigationMixin, App[None]):
         set_locale(self.config_service.config.language)
         self._refresh_ui_translations()
 
-        timer_interval = 5.0 if self.config_service.config.efficiency_mode else 1.0
-        self.update_timer = self.set_interval(timer_interval, self._update_playback_progress, pause=True)
+        self.update_timer = self.set_interval(1.0, self._update_playback_progress, pause=True)

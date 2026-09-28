@@ -45,3 +45,15 @@ class PlaylistSongTable(Model):
 
     def __str__(self) -> str:
         return f"Playlist {self.playlist_id} - Song {self.song_id} (#{self.order})"
+
+
+class HistoryTable(Model):
+    id = fields.IntField(primary_key=True)
+    song_title = fields.CharField(max_length=255)
+    song_artist = fields.CharField(max_length=255)
+    source = fields.CharField(max_length=2048, null=True)
+    played_at = fields.DatetimeField(auto_now_add=True)
+
+    class Meta:
+        table = "history"
+        ordering = ("-played_at",)

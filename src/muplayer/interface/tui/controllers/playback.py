@@ -6,8 +6,10 @@ from typing import TYPE_CHECKING, Any
 
 from textual import on, work
 from textual.css.query import NoMatches
+from textual.message import Message
 from textual.message_pump import MessagePump
 
+from muplayer.domain import Song
 from muplayer.infrastructure.i18n import t
 from muplayer.interface.tui.controllers.base import safe_call_from_thread
 from muplayer.interface.tui.widgets import MiniPlayer, SearchView, SongList
@@ -29,6 +31,11 @@ class PlaybackMixin(MessagePump):
     is_shuffling: bool
     is_repeating: bool
     update_timer: Any
+
+    class TrackStarted(Message):
+        def __init__(self, song: Song):
+            super().__init__()
+            self.song = song
 
     def _play_track(self, index: int) -> None:
         """Selects track in service and triggers background worker for audio."""
@@ -61,6 +68,9 @@ class PlaybackMixin(MessagePump):
             self.playback_service.prepare_and_play_active_song()
             logger.debug("Worker: prepare_and_play succeeded. Scheduling is_playing=True on UI thread.")
             safe_call_from_thread(self, setattr, self, "is_playing", True)
+            active_song = self.playback_service.active_song
+            if active_song:
+                safe_call_from_thread(self, self.post_message, PlaybackMixin.TrackStarted(active_song))
         except ValueError:
             logger.debug("Worker: ValueError (missing URL). Scheduling is_playing=False on UI thread.")
             safe_call_from_thread(self, self.notify, t("playback_missing_url"), severity="error")
@@ -79,7 +89,7 @@ class PlaybackMixin(MessagePump):
         logger.debug(
             "watch_is_playing fired: is_playing=%s. player.is_paused=%s, service._is_loading=%s",
             is_playing,
-            self.playback_service.audio_player.is_paused,
+            self.playback_service.is_paused,
             self.playback_service.is_loading,
         )
         with contextlib.suppress(NoMatches):
@@ -186,6 +196,7 @@ class PlaybackMixin(MessagePump):
         next_idx = self.playback_service.get_next_index()
         if next_idx is None:
             self.is_playing = False
+            self.notify(t("queue_ended"), severity="information")
             return
         self._play_track(next_idx)
 

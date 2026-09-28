@@ -48,6 +48,10 @@ class PlaybackService:
         return self._is_loading
 
     @property
+    def is_paused(self) -> bool:
+        return self.audio_player.is_paused
+
+    @property
     def current_position(self) -> int:
         return self._current_position
 
@@ -142,14 +146,16 @@ class PlaybackService:
                 logger.warning("Could not resolve a playable audio URL for source: '%s'", url)
                 raise RuntimeError("playback_engine_error")
 
-            if self.audio_player.play(audio_url):
-                self._is_playing = True
-                return audio_url
-            else:
+            if not self.audio_player.play(audio_url):
                 self.invalidate_audio_cache(url)
-                self._is_playing = False
-                logger.error("Audio player rejected the stream URL for source: '%s'", url)
-                raise RuntimeError("playback_engine_error")
+                audio_url = self.media_provider.extract_audio_url(url)
+                if not audio_url or not self.audio_player.play(audio_url):
+                    self._is_playing = False
+                    logger.error("Audio player rejected the stream URL for source: '%s'", url)
+                    raise RuntimeError("playback_engine_error")
+
+            self._is_playing = True
+            return audio_url
         except (ValueError, RuntimeError):
             raise
         except Exception as e:

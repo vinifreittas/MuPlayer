@@ -10,6 +10,7 @@ from textual.widgets import ContentSwitcher
 
 from muplayer.domain import Song
 from muplayer.infrastructure.i18n import t
+from muplayer.interface.tui.controllers.playback import PlaybackMixin
 from muplayer.interface.tui.screens import Configurations, SelectPlaylistModal
 from muplayer.interface.tui.widgets import Header, MiniPlayer, Sidebar, SongList
 
@@ -71,12 +72,32 @@ class NavigationMixin(MessagePump):
         songs = playlist.songs if playlist else []
 
         with contextlib.suppress(NoMatches):
-            self.query_one(SongList).songs = songs
+            song_list = self.query_one(SongList)
+            song_list.songs = songs
+            song_list.title = event.name
+            song_list.show_header = True
+        self.active_view = "dashboard-view"
+
+    @on(Sidebar.HistoryRequested)
+    async def _handle_history_requested(self, event: Sidebar.HistoryRequested) -> None:
+        history = await self.library_service.get_history()
+        with contextlib.suppress(NoMatches):
+            song_list = self.query_one(SongList)
+            song_list.songs = history
+            song_list.show_header = False
         self.active_view = "dashboard-view"
 
     @on(Header.HomeCalled)
     def _handle_home(self, event: Any) -> None:
+        with contextlib.suppress(NoMatches):
+            song_list = self.query_one(SongList)
+            song_list.title = ""
+            song_list.show_header = True
         self.active_view = "dashboard-view"
+
+    @on(PlaybackMixin.TrackStarted)
+    def _handle_track_started(self, event: PlaybackMixin.TrackStarted) -> None:
+        self.run_worker(self.library_service.add_to_history(event.song), exclusive=False)
 
     def _refresh_ui_translations(self) -> None:
         for widget_cls in (Header, Sidebar, SongList, MiniPlayer):
@@ -92,7 +113,5 @@ class NavigationMixin(MessagePump):
                 self.config_service.update(**new_settings)
                 if "language" in new_settings:
                     self._refresh_ui_translations()
-                if "efficiency_mode" in new_settings and self.update_timer:
-                    self.update_timer.interval = 5.0 if new_settings["efficiency_mode"] else 1.0
 
         self.push_screen(Configurations(config=self.config_service.config), check_settings)

@@ -1,4 +1,0 @@
-- A player (MPV or VLC)
-- A JavaScript runtime (Quickjs or Node)
-- A compatible terminal
-- A browser

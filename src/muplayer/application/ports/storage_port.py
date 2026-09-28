@@ -45,3 +45,13 @@ class StoragePort(ABC):
     async def remove_song_from_playlist(self, playlist_name: str, song_index: int) -> bool:
         """Remove a song at a given index and compact remaining positions."""
         ...
+
+    @abstractmethod
+    async def add_to_history(self, song: Song) -> None:
+        """Record a played song to history."""
+        ...
+
+    @abstractmethod
+    async def get_history(self, limit: int = 50) -> list[Song]:
+        """Retrieve recent listening history."""
+        ...

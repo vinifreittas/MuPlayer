@@ -4,7 +4,7 @@ from textual import events, on
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
-from textual.widgets import Input, Label, Select, Static, Switch
+from textual.widgets import Input, Label, Select, Static
 
 from muplayer.domain import AppConfig
 from muplayer.infrastructure.i18n import t
@@ -39,11 +39,6 @@ class Configurations(ModalScreen):
                 options=[("English", "en"), ("Português", "pt")], value=self.app_config.language, id="config-language"
             )
 
-            # 3. Efficiency Mode Toggle
-            with Horizontal(classes="toggle-container"):
-                yield Label(t("config_efficiency_mode"))
-                yield Switch(value=self.app_config.efficiency_mode, id="config-efficiency")
-
     @on(events.Click, "#config-close-btn")
     def _on_close_click(self) -> None:
         self.action_dismiss()
@@ -58,6 +53,5 @@ class Configurations(ModalScreen):
         new_settings = {
             "search_limit": max(1, min(search_limit_val, 50)),  # clamp between 1 and 50
             "language": self.query_one("#config-language", Select).value,
-            "efficiency_mode": self.query_one("#config-efficiency", Switch).value,
         }
         self.dismiss(new_settings)

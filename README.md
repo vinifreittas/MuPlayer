@@ -19,12 +19,20 @@ Ele utiliza `yt-dlp` para buscas e extração de URLs de stream, `mpv` ou `vlc` 
 
 ## 📋 Requisitos do Sistema
 
-Para rodar o MuPlayer perfeitamente, o sistema necessita dos seguintes pré-requisitos:
+### Dependências do Sistema
 
-1. **Python & UV:** Python `>= 3.12` e gerenciador [uv](https://docs.astral.sh/uv/) instalado no sistema.
-2. **Engine de Áudio:** `mpv` (*recomendado*, requer `libmpv`) ou `vlc` (`libvlc`).
-3. **JavaScript Runtime:** `quickjs`, `node`, `deno` ou `bun` presente no `PATH` do sistema.
-   > 💡 *O `yt-dlp` necessita de um runtime JS no ambiente para decifrar assinaturas e extrair as URLs de áudio do YouTube.*
+| Dependência | Opções |
+| :--- | :--- |
+| **Engine de Áudio** | `mpv` *(recomendado)* ou `vlc` |
+| **JavaScript Runtime** | `quickjs`, `node`, `deno` ou `bun` |
+| **Terminal compatível** | Suporte a cores e TTY interativo |
+| **Navegador Web** | Chrome, Firefox, Brave, etc. *(usado para extração de cookies pelo yt-dlp)* |
+
+> 💡 *Execute `muplayer setup` para instalar as dependências do sistema automaticamente, ou `muplayer doctor` para verificar o estado do ambiente.*
+
+### Dependências Python
+
+Python `>= 3.12` e o gerenciador [uv](https://docs.astral.sh/uv/) instalado no sistema. Todas as bibliotecas Python são gerenciadas automaticamente pelo `uv`.
 
 ---
 
@@ -96,13 +104,6 @@ Os dados do MuPlayer são mantidos em diretórios padrão do sistema operacional
 * **Banco de Dados e Configuração:** `~/.local/share/MuPlayer/` (`app_data.db`, `config.json`)
 * **Cache de Buscas e URLs:** `~/.cache/MuPlayer/` (cache de buscas com 5 min TTL e URLs de stream com 1h TTL)
 * **Logs do Sistema:** `~/.local/state/MuPlayer/logs/`
-
----
-
-## 🗺️ Roteiro de Desenvolvimento (Roadmap Futuro)
-
-- [ ] **Modo Offline Opcional:** Download de faixas selecionadas da biblioteca local para escuta offline sem dependência de conexão de rede.
-- [ ] **Aprimoramento de Importação de Playlists:** Suporte avançado à sincronização periódica de playlists importadas via URL.
 
 ---
 

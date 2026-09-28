@@ -18,13 +18,16 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "playback_engine_error": "Failed to start playback in the audio engine.",
         "playback_missing_url": "Invalid or missing song URL.",
         "no_track_playing": "No track playing",
+        "queue_ended": "End of queue.",
         # Playlist
         "no_playlist_selected": "No playlist selected.",
         "song_added_to_playlist": "'{title}' added to '{playlist}'.",
+        "song_already_in_playlist": "This track is already in '{playlist}'.",
         "song_add_failed": "Failed to add song to '{playlist}'.",
         "playlist_create_failed": "Failed to create playlist '{playlist}'.",
         # Search
         "search_no_results": "No results found for '{query}'.",
+        "search_empty_state": "No results found.",
         "search_network_error": "Network error while searching for '{query}'. Check your connection.",
         # Header Widget
         "search_placeholder": "🔍 Search for songs, artists, podcasts...",
@@ -33,7 +36,7 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "sidebar_library": "LIBRARY",
         "sidebar_home": "🏠 Home",
         "sidebar_discover": "🔍 Discover",
-        "sidebar_radio": "📻 Radio",
+        "sidebar_history": "⏳ History",
         "sidebar_playlists": "PLAYLISTS",
         # SongList Widget
         "songs_title": "Songs",
@@ -42,7 +45,6 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "config_title": "Application Settings",
         "config_search_limit": "Max Search Results:",
         "config_language": "Language / Idioma:",
-        "config_efficiency_mode": "Efficiency Mode:",
         "config_close": "Close",
         # SelectPlaylistModal
         "modal_add_title": "🎵 Add to Playlist",
@@ -64,13 +66,16 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "playback_engine_error": "Falha ao iniciar reprodução no engine de áudio.",
         "playback_missing_url": "URL da música inválida ou ausente.",
         "no_track_playing": "Nenhuma música tocando",
+        "queue_ended": "Fim da fila.",
         # Playlist
         "no_playlist_selected": "Nenhuma playlist selecionada.",
         "song_added_to_playlist": "'{title}' adicionada a '{playlist}'.",
+        "song_already_in_playlist": "Esta faixa já está em '{playlist}'.",
         "song_add_failed": "Falha ao adicionar música a '{playlist}'.",
         "playlist_create_failed": "Falha ao criar playlist '{playlist}'.",
         # Search
         "search_no_results": "Nenhum resultado encontrado para '{query}'.",
+        "search_empty_state": "Nenhum resultado encontrado.",
         "search_network_error": "Erro de rede ao buscar '{query}'. Verifique sua conexão.",
         # Header Widget
         "search_placeholder": "🔍 Buscar músicas, artistas, podcasts...",
@@ -79,7 +84,7 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "sidebar_library": "BIBLIOTECA",
         "sidebar_home": "🏠 Início",
         "sidebar_discover": "🔍 Descobrir",
-        "sidebar_radio": "📻 Rádio",
+        "sidebar_history": "⏳ Histórico",
         "sidebar_playlists": "PLAYLISTS",
         # SongList Widget
         "songs_title": "Músicas",
@@ -88,7 +93,6 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "config_title": "Configurações do Aplicativo",
         "config_search_limit": "Limite de Busca:",
         "config_language": "Idioma / Language:",
-        "config_efficiency_mode": "Modo Eficiência:",
         "config_close": "Fechar",
         # SelectPlaylistModal
         "modal_add_title": "🎵 Adicionar à Playlist",

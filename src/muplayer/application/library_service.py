@@ -69,6 +69,12 @@ class LibraryService:
             created = await self.storage.create_playlist(clean_name)
             if not created:
                 return False, f"Falha ao criar playlist '{clean_name}'."
+        else:
+            for s in existing.songs:
+                if s.source == song.source:
+                    from muplayer.infrastructure.i18n import t
+
+                    return False, t("song_already_in_playlist", playlist=clean_name)
 
         success = await self.storage.add_song_to_playlist(clean_name, song)
         if success:
@@ -89,3 +95,9 @@ class LibraryService:
         if success:
             return True, f"Música removida da playlist '{clean_name}'."
         return False, f"Falha ao remover música no índice {song_index} da playlist '{clean_name}'."
+
+    async def add_to_history(self, song: Song) -> None:
+        await self.storage.add_to_history(song)
+
+    async def get_history(self, limit: int = 50) -> list[Song]:
+        return await self.storage.get_history(limit)

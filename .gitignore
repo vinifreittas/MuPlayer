@@ -77,7 +77,3 @@ coverage.xml
 # Operating system files
 .DS_Store
 Thumbs.db
-
-# Extra
-/main.py
-.context/

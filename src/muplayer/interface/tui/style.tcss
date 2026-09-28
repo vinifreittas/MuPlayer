@@ -438,6 +438,12 @@ MiniPlayer #volume-bar Bar > .bar--bar      { color: $text; }
 /* ==========================================================================
    Utilities
    ========================================================================== */
+.empty-state {
+    text-align: center;
+    color: $text-muted;
+    padding: 2;
+}
+
 .hidden {
     display: none;
 }
