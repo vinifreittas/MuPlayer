@@ -76,8 +76,6 @@ class MuPlayer(PlaybackMixin, SearchMixin, NavigationMixin, App[None]):
             self.register_theme(theme)
         self.theme = "spotify-dark"
 
-        await self.library_service.connect()
-
         # Wire initial state to UI components
         playlists = await self.library_service.get_playlists()
         with contextlib.suppress(NoMatches):

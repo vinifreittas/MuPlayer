@@ -124,7 +124,13 @@ def main(
             search_service=SearchService(youtube_provider, cache),
             config_service=config_service,
         )
-        app.run()
+
+        async def _run_app(app: MuPlayer, storage: TortoiseStorageAdapter) -> None:
+            """Runs the TUI and DB lifecycle on a single shared asyncio event loop."""
+            async with storage:
+                await app.run_async()
+
+        asyncio.run(_run_app(app, storage))
 
     except KeyboardInterrupt:
         typer.secho("\nMuPlayer session terminated by user.", fg="yellow")
@@ -136,8 +142,6 @@ def main(
             audio_player.close()
         if youtube_provider:
             youtube_provider.close()
-        if storage:
-            asyncio.run(storage.disconnect())
         if cache:
             cache.close()
 
