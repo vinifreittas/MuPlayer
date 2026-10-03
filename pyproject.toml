@@ -9,28 +9,27 @@ description = "A lightweight music app for terminal"
 requires-python = ">=3.12"
 readme = "README.md"
 license = { file = "LICENSE" }
-authors = [
-    { name = "Vinicius Freittas", email = "vinifreitas6465@gmail.com" }
-]
+authors = [{ name = "Vinicius Freittas", email = "vinifreitas6465@gmail.com" }]
 keywords = ["Music"]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License", 
-    "Operating System :: OS Independent"
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
 ]
 dependencies = [
-    "textual",
-    "yt-dlp",
-    "python-mpv",
-    "python-vlc",
-    "tortoise-orm",
-    "aerich",
-    "diskcache",
-    "typer",
-    "pydantic",
-    "platformdirs",
-    "packaging",
-    "installed-browsers",
+    "textual>=8.2.8",
+    "yt-dlp>=2026.8.19",
+    "python-mpv>=1.0.8",
+    "python-vlc>=3.0.21203",
+    "tortoise-orm>=1.1.8",
+    "aerich>=0.10.1",
+    "diskcache>=5.6.3",
+    "typer>=0.27.2",
+    "pydantic>=2.13.5",
+    "platformdirs>=4.12.2",
+    "packaging>=26.3",
+    "installed-browsers>=0.1.5",
+    "yt-dlp-ejs>=0.8.0",
 ]
 
 [project.scripts]
@@ -43,12 +42,12 @@ Bug-Tracker = "https://github.com/vinifreittas/MuPlayer/issues"
 
 [dependency-groups]
 dev = [
-    "pre-commit",
-    "ruff",
-    "pytest",
-    "pytest-asyncio",
-    "pytest-cov",
-    "deadcode",
+    "pre-commit>=4.6.2",
+    "ruff>=0.16.10",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "pytest-cov>=7.1.0",
+    "deadcode>=2.4.1",
 ]
 
 # --- Hatch Configuration ---
@@ -71,15 +70,15 @@ src = ["src"]
 
 [tool.ruff.lint]
 select = [
-    "F",    # Pyflakes
-    "E",    # pycodestyle errors
-    "W",    # pycodestyle warnings
-    "I",    # isort (import sorting)
-    "UP",   # pyupgrade (syntax modernization)
-    "B",    # flake8-bugbear (bug prevention)
-    "SIM",  # flake8-simplify (code simplification)
-    "N",    # naming convention
-    "RUF",  # ruff specific rules
+    "F",   # Pyflakes
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "I",   # isort (import sorting)
+    "UP",  # pyupgrade (syntax modernization)
+    "B",   # flake8-bugbear (bug prevention)
+    "SIM", # flake8-simplify (code simplification)
+    "N",   # naming convention
+    "RUF", # ruff specific rules
 ]
 
 ignore = [

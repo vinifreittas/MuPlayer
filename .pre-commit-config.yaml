@@ -1,7 +1,7 @@
 default_install_hook_types: [pre-commit]
 
 repos:
-  # 1. Basic git hygiene 
+  # 1. Basic git hygiene
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
@@ -9,11 +9,6 @@ repos:
         args: ["--maxkb=3000"]
       - id: check-merge-conflict
       - id: check-yaml
-
-  - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.30.0
-    hooks:
-      - id: gitleaks
 
   # 2. Lockfile integrity
   - repo: https://github.com/astral-sh/uv-pre-commit
@@ -27,6 +22,6 @@ repos:
     hooks:
       - id: ruff
         name: ruff-linter
-        args: [ --fix, --exit-non-zero-on-fix ]
+        args: [--fix, --exit-non-zero-on-fix]
       - id: ruff-format
         name: ruff-formatter

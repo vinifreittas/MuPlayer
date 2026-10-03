@@ -1,10 +1,5 @@
 # 📋 MuPlayer — Backlog v1.0.0
 
-> Atualizado em: 2026-09-28  
-> Base: Análise do `ROADMAP v1-0-0.md` × Código TUI × Alinhamento via `/grill-me`
-
----
-
 ## Legenda de Prioridade
 
 | Prioridade | Descrição |
@@ -49,15 +44,7 @@
 
 ---
 
-## 🎨 Épico 2 — Refinamento de UX/TUI
-
-### BL-12 — Exibição Numérica do Volume 🟡 P1
-- **Decisão de UI/UX:**
-  - Adicionar um label numérico no `MiniPlayer` ao lado da barra de volume exibindo a porcentagem atual (ex.: `50%`).
-
----
-
-## 🟢 Épico 3 — Roadmap Futuro (v1.1.0 e v1.2.0)
+## 🟢 Épico 2 — Roadmap Futuro (v1.1.0 e v1.2.0)
 
 Os itens abaixo foram postergados ou mantidos no planejamento de versões futuras:
 
@@ -79,7 +66,6 @@ Os itens abaixo foram postergados ou mantidos no planejamento de versões futura
 | **BL-01** | Exclusão de Playlist (🗑 hover inline + toast) | Playlists | 🔴 P0 |
 | **BL-02** | Remoção de Faixa de Playlist (🗑 hover inline no SongList) | Playlists | 🔴 P0 |
 | **BL-03** | Highlight de playlist selecionada na Sidebar | UI/UX | 🟡 P1 |
-| **BL-12** | Label de porcentagem numérica do Volume | UI/UX | 🟡 P1 |
 | **BL-13/14** | Keybindings de busca e sidebar | UI/UX | 🟢 v1.1.0 |
 | **BL-17/18** | Testes TUI e cache audit | QA | 🟢 v1.1.0 |
 | **BL-19** | Importação de Playlist YouTube | Feature | 🟢 v1.1.0 |

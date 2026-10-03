@@ -44,17 +44,9 @@ class YouTubeMediaProvider(SearchPort, MediaPort):
         extractor_opts = {
             **self.base_opts,
             "format": "bestaudio/best",
-            "youtube_include_dash_manifest": False,
-            "youtube_include_hls_manifest": False,
             "noplaylist": True,
             "js_runtimes": js_runtime,
             "cookiesfrombrowser": (browser,),
-            "extractor_args": {
-                "youtube": {
-                    "player_client": ["ios", "mweb"],
-                    "skip": ["dash", "hls", "translated_subs"],
-                }
-            },
         }
 
         self._search_ydl = yt_dlp.YoutubeDL(search_opts)
