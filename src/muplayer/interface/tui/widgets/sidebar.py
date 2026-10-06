@@ -54,7 +54,7 @@ class Sidebar(Vertical):
     def _on_playlist_click(self, event: ListView.Selected) -> None:
         if isinstance(event.item, ListItem):
             with contextlib.suppress(NoMatches):
-                playlist_name = str(event.item.query_one(Label).renderable)
+                playlist_name = str(event.item.query_one(Label).content)
                 self.post_message(self.PlaylistSelected(playlist_name))
 
     @on(ListView.Selected, "#library-list")
