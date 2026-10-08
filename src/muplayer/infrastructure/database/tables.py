@@ -8,7 +8,7 @@ class SongTable(Model):
     artist = fields.CharField(max_length=255, db_index=True)
     album = fields.CharField(max_length=255, default="YouTube Audio")
     duration = fields.IntField(default=0)
-    source = fields.CharField(max_length=2048, null=True)  # URLs can be long
+    source = fields.CharField(max_length=2048)  # URLs can be long
 
     class Meta:
         table = "songs"
@@ -51,7 +51,7 @@ class HistoryTable(Model):
     id = fields.IntField(primary_key=True)
     song_title = fields.CharField(max_length=255)
     song_artist = fields.CharField(max_length=255)
-    source = fields.CharField(max_length=2048, null=True)
+    source = fields.CharField(max_length=2048, unique=True)
     played_at = fields.DatetimeField(auto_now_add=True)
 
     class Meta:

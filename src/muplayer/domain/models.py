@@ -12,8 +12,16 @@ class Song(BaseModel):
     artist: str
     album: str = "YouTube Audio"
     duration: int = Field(default=0, ge=0)
-    source: str | None = None
+    source: str
     added_at: datetime | None = None
+
+    @field_validator("source")
+    @classmethod
+    def validate_source(cls, v: str) -> str:
+        """Ensures source is a non-empty string."""
+        if not v or not v.strip():
+            raise ValueError("Song source cannot be empty")
+        return v.strip()
 
     @field_validator("duration", mode="before")
     @classmethod

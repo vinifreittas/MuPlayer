@@ -69,11 +69,13 @@ class MiniPlayer(Horizontal):
             self.watch_current_song(None)
 
     def watch_current_song(self, current_song: Song | None) -> None:
-        song_data = current_song or Song(title=t("no_track_playing"), artist="", album="", duration=0)
+        title = current_song.title if current_song else t("no_track_playing")
+        artist = current_song.artist if current_song else ""
+        duration = current_song.duration if current_song else 0
 
-        self.query_one("#track-title", Label).update(song_data.title)
-        self.query_one("#track-artist", Label).update(song_data.artist)
-        self.query_one("#time-total", Label).update(format_time(song_data.duration))
+        self.query_one("#track-title", Label).update(title)
+        self.query_one("#track-artist", Label).update(artist)
+        self.query_one("#time-total", Label).update(format_time(duration))
         # Setting time_elapsed to 0 automatically triggers watch_time_elapsed(0),
         # which resets both the time label and the progress bar — no manual update needed.
         self.time_elapsed = 0

@@ -1,26 +1,29 @@
+import pytest
+from pydantic import ValidationError
+
 from muplayer.domain import Playlist, QueueState, Song
 
 
 def test_song_methods():
-    """Valida métodos e propriedades da entidade Song."""
+    """Valida métodos e propriedades da entidade Song com source obrigatório."""
     song_valid = Song(title="Track 1", artist="Artist", duration=120, source="http://example.com/audio")
-    song_empty_source = Song(title="Track 2", artist="Artist", duration=-10, source="  ")
-    song_no_source = Song(title="Track 3", artist="Artist", duration=None)
-
     assert song_valid.duration == 120
     assert song_valid.has_source is True
+    assert song_valid.source == "http://example.com/audio"
 
-    assert song_empty_source.duration == 0
-    assert song_empty_source.has_source is False
+    # Source vazio ou com apenas espaços deve lançar ValidationError
+    with pytest.raises(ValidationError):
+        Song(title="Track 2", artist="Artist", duration=100, source="   ")
 
-    assert song_no_source.duration == 0
-    assert song_no_source.has_source is False
+    # Source ausente deve lançar ValidationError
+    with pytest.raises(ValidationError):
+        Song(title="Track 3", artist="Artist", duration=100)  # type: ignore[call-arg]
 
 
 def test_playlist_methods():
     """Valida métodos de cálculo e busca na entidade Playlist."""
-    song1 = Song(id=10, title="Song 1", artist="Artist 1", duration=100)
-    song2 = Song(id=20, title="Song 2", artist="Artist 2", duration=250)
+    song1 = Song(id=10, title="Song 1", artist="Artist 1", duration=100, source="http://example.com/1")
+    song2 = Song(id=20, title="Song 2", artist="Artist 2", duration=250, source="http://example.com/2")
     playlist = Playlist(name="Favorites", songs=[song1, song2])
 
     assert playlist.name == "Favorites"

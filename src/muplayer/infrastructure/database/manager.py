@@ -3,7 +3,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-from tortoise import Tortoise
+from tortoise import Tortoise, timezone
 from tortoise.expressions import F
 from tortoise.transactions import in_transaction
 
@@ -21,6 +21,7 @@ class TortoiseStorageAdapter(StoragePort):
     def __init__(self, db_path: Path):
         self.db_path = db_path
         self._config = self._build_config()
+        self._is_connected: bool = False
 
     def _build_config(self) -> dict[str, Any]:
         """Dynamically generates the Tortoise ORM configuration dictionary."""
@@ -31,15 +32,26 @@ class TortoiseStorageAdapter(StoragePort):
         try:
             await Tortoise.init(config=self._config)
             await Tortoise.generate_schemas(safe=True)
+            self._is_connected = True
             logger.info("Database connection via Tortoise ORM established. Path: %s", self.db_path)
         except Exception as e:
             logger.error("Failed to initialize database at '%s': %s", self.db_path, e, exc_info=True)
             raise
 
     async def disconnect(self) -> None:
-        """Safely closes all open database connections."""
-        await Tortoise.close_connections()
-        logger.info("Database connections closed.")
+        """Safely closes all open database connections and checkpoints the WAL journal."""
+        if not self._is_connected:
+            return
+        try:
+            conn = Tortoise.get_connection("default")
+            if conn:
+                await conn.execute_query("PRAGMA wal_checkpoint(TRUNCATE);")
+        except Exception as e:
+            logger.debug("wal_checkpoint during disconnect skipped: %s", e)
+        finally:
+            self._is_connected = False
+            await Tortoise.close_connections()
+            logger.info("Database connections closed.")
 
     async def __aenter__(self) -> "TortoiseStorageAdapter":
         """Enables async context manager usage: 'async with TortoiseStorageAdapter(...) as storage:'"""
@@ -197,8 +209,39 @@ class TortoiseStorageAdapter(StoragePort):
         return True
 
     async def add_to_history(self, song: Song) -> None:
-        await HistoryTable.create(song_title=song.title, song_artist=song.artist, source=song.source)
+        """Records a played song to history, updating timestamp if already present (upsert)."""
+        clean_source = song.source.strip()
+        now = timezone.now()
+
+        async with in_transaction():
+            existing = await HistoryTable.filter(source=clean_source).order_by("-played_at").first()
+            if existing:
+                existing.played_at = now
+                existing.song_title = song.title.strip()
+                existing.song_artist = song.artist.strip()
+                await existing.save(update_fields=["played_at", "song_title", "song_artist"])
+                await HistoryTable.filter(source=clean_source).exclude(id=existing.id).delete()
+            else:
+                await HistoryTable.create(
+                    song_title=song.title.strip(),
+                    song_artist=song.artist.strip(),
+                    source=clean_source,
+                    played_at=now,
+                )
+            logger.info("Song '%s' updated in history (source=%s).", song.title, clean_source)
 
     async def get_history(self, limit: int = 50) -> list[Song]:
-        rows = await HistoryTable.all().limit(limit)
-        return [Song(title=r.song_title, artist=r.song_artist, source=r.source) for r in rows]
+        """Retrieves recent listening history, sorted by timestamp latest first."""
+        rows = await HistoryTable.all().order_by("-played_at", "-id")
+        result: list[Song] = []
+        seen_sources: set[str] = set()
+
+        for r in rows:
+            if r.source in seen_sources:
+                continue
+            seen_sources.add(r.source)
+            result.append(Song(title=r.song_title, artist=r.song_artist, source=r.source))
+            if len(result) >= limit:
+                break
+
+        return result

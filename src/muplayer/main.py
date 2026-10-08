@@ -127,8 +127,13 @@ def main(
 
         async def _run_app(app: MuPlayer, storage: TortoiseStorageAdapter) -> None:
             """Runs the TUI and DB lifecycle on a single shared asyncio event loop."""
-            async with storage:
-                await app.run_async()
+            try:
+                await storage.connect()
+                with contextlib.suppress(asyncio.CancelledError, KeyboardInterrupt):
+                    await app.run_async()
+            finally:
+                with contextlib.suppress(Exception):
+                    await storage.disconnect()
 
         asyncio.run(_run_app(app, storage))
 
@@ -144,6 +149,9 @@ def main(
             youtube_provider.close()
         if cache:
             cache.close()
+        if storage and getattr(storage, "_is_connected", False):
+            with contextlib.suppress(Exception):
+                asyncio.run(storage.disconnect())
 
 
 if __name__ == "__main__":
