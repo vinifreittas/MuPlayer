@@ -25,7 +25,7 @@ class Header(Horizontal):
         pass
 
     def compose(self) -> ComposeResult:
-        yield Label("MuPlayer", id="title")
+        yield Label("🎵 MuPlayer", id="title")
         yield Input(placeholder=t("search_placeholder"), id="search-box")
         yield Label(t("settings_btn"), id="settings-btn")
 

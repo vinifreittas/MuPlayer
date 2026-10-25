@@ -12,7 +12,7 @@ from muplayer.domain import Song
 from muplayer.infrastructure.i18n import t
 from muplayer.interface.tui.controllers.playback import PlaybackMixin
 from muplayer.interface.tui.screens import Configurations, SelectPlaylistModal
-from muplayer.interface.tui.widgets import Header, MiniPlayer, Sidebar, SongList
+from muplayer.interface.tui.widgets import DiscoverView, Header, HomeView, MiniPlayer, Sidebar, SongList
 
 if TYPE_CHECKING:
     from muplayer.application.config_service import ConfigService
@@ -33,6 +33,12 @@ class NavigationMixin(MessagePump):
         """Single point of contact with ContentSwitcher — reacts to the active_view reactive."""
         with contextlib.suppress(NoMatches):
             self.query_one(ContentSwitcher).current = active_view
+
+    def _show_main_content(self, panel_id: str) -> None:
+        """Switches the inner ContentSwitcher panel (home-view vs song-list-view)."""
+        with contextlib.suppress(NoMatches):
+            self.query_one("#main-content-switcher", ContentSwitcher).current = panel_id
+        self.active_view = "dashboard-view"
 
     async def action_add_to_playlist(self) -> None:
         """Opens playlist modal for the active song."""
@@ -76,7 +82,7 @@ class NavigationMixin(MessagePump):
             song_list.songs = songs
             song_list.title = event.name
             song_list.show_header = True
-        self.active_view = "dashboard-view"
+        self._show_main_content("song-list-view")
 
     @on(Sidebar.HistoryRequested)
     async def _handle_history_requested(self, event: Sidebar.HistoryRequested) -> None:
@@ -85,22 +91,23 @@ class NavigationMixin(MessagePump):
             song_list = self.query_one(SongList)
             song_list.songs = history
             song_list.show_header = False
-        self.active_view = "dashboard-view"
+        self._show_main_content("song-list-view")
 
+    @on(Sidebar.HomeRequested)
     @on(Header.HomeCalled)
     def _handle_home(self, event: Any) -> None:
-        with contextlib.suppress(NoMatches):
-            song_list = self.query_one(SongList)
-            song_list.title = ""
-            song_list.show_header = True
-        self.active_view = "dashboard-view"
+        self._show_main_content("home-view")
+
+    @on(Sidebar.DiscoverRequested)
+    def _handle_discover(self, event: Any) -> None:
+        self._show_main_content("discover-view")
 
     @on(PlaybackMixin.TrackStarted)
     def _handle_track_started(self, event: PlaybackMixin.TrackStarted) -> None:
         self.run_worker(self.library_service.add_to_history(event.song), exclusive=False)
 
     def _refresh_ui_translations(self) -> None:
-        for widget_cls in (Header, Sidebar, SongList, MiniPlayer):
+        for widget_cls in (Header, Sidebar, SongList, MiniPlayer, HomeView, DiscoverView):
             with contextlib.suppress(NoMatches):
                 w = self.query_one(widget_cls)
                 if hasattr(w, "update_translations"):

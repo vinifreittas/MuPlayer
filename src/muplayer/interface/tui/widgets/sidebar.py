@@ -16,32 +16,38 @@ class Sidebar(Vertical):
 
     playlist_names = reactive[list[str]]([])
 
+    class HomeRequested(Message):
+        pass
+
+    class DiscoverRequested(Message):
+        pass
+
+    class HistoryRequested(Message):
+        pass
+
     class PlaylistSelected(Message):
         def __init__(self, name: str):
             super().__init__()
             self.name = name
 
-    class HistoryRequested(Message):
-        pass
-
     def compose(self) -> ComposeResult:
-        yield Label(t("sidebar_library"), id="lib-title", classes="section-title")
-        with ListView(id="library-list"):
+        yield Label(t("sidebar_menu"), id="menu-title", classes="section-title")
+        with ListView(id="menu-list"):
             yield ListItem(Label(t("sidebar_home")), id="item-home")
             yield ListItem(Label(t("sidebar_discover")), id="item-discover")
             yield ListItem(Label(t("sidebar_history")), id="item-history")
 
-        yield Label(t("sidebar_playlists"), id="pl-title", classes="section-title")
+        yield Label(t("sidebar_library"), id="lib-title", classes="section-title")
         yield ListView(id="playlist-items")
 
     def update_translations(self) -> None:
         """Update static label texts to match current locale."""
         with contextlib.suppress(NoMatches):
-            self.query_one("#lib-title", Label).update(t("sidebar_library"))
+            self.query_one("#menu-title", Label).update(t("sidebar_menu"))
             self.query_one("#item-home Label", Label).update(t("sidebar_home"))
             self.query_one("#item-discover Label", Label).update(t("sidebar_discover"))
             self.query_one("#item-history Label", Label).update(t("sidebar_history"))
-            self.query_one("#pl-title", Label).update(t("sidebar_playlists"))
+            self.query_one("#lib-title", Label).update(t("sidebar_library"))
 
     def watch_playlist_names(self, playlist_names: list[str]):
         playlist_listview = self.query_one("#playlist-items", ListView)
@@ -57,7 +63,12 @@ class Sidebar(Vertical):
                 playlist_name = str(event.item.query_one(Label).content)
                 self.post_message(self.PlaylistSelected(playlist_name))
 
-    @on(ListView.Selected, "#library-list")
-    def _on_library_item_click(self, event: ListView.Selected) -> None:
-        if event.item.id == "item-history":
-            self.post_message(self.HistoryRequested())
+    @on(ListView.Selected, "#menu-list")
+    def _on_menu_item_click(self, event: ListView.Selected) -> None:
+        match event.item.id:
+            case "item-home":
+                self.post_message(self.HomeRequested())
+            case "item-discover":
+                self.post_message(self.DiscoverRequested())
+            case "item-history":
+                self.post_message(self.HistoryRequested())

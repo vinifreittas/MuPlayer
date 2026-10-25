@@ -15,7 +15,7 @@ from muplayer.application.search_service import SearchService
 from muplayer.infrastructure.i18n import set_locale
 from muplayer.interface.tui.controllers import NavigationMixin, PlaybackMixin, SearchMixin
 from muplayer.interface.tui.themes import spotify_dark_theme
-from muplayer.interface.tui.widgets import Header, MiniPlayer, SearchView, Sidebar, SongList
+from muplayer.interface.tui.widgets import DiscoverView, Header, HomeView, MiniPlayer, SearchView, Sidebar, SongList
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +66,10 @@ class MuPlayer(PlaybackMixin, SearchMixin, NavigationMixin, App[None]):
         with ContentSwitcher(initial="dashboard-view"):
             with Horizontal(id="dashboard-view"):
                 yield Sidebar()
-                yield SongList()
+                with ContentSwitcher(initial="home-view", id="main-content-switcher"):
+                    yield HomeView(id="home-view")
+                    yield DiscoverView(id="discover-view")
+                    yield SongList(id="song-list-view")
             yield SearchView(id="search-view")
         yield MiniPlayer()
 
@@ -76,15 +79,10 @@ class MuPlayer(PlaybackMixin, SearchMixin, NavigationMixin, App[None]):
             self.register_theme(theme)
         self.theme = "spotify-dark"
 
-        # Wire initial state to UI components
+        # Wire initial playlists to sidebar; start on HomeView (no song list shown)
         playlists = await self.library_service.get_playlists()
         with contextlib.suppress(NoMatches):
-            if playlists:
-                self.query_one(Sidebar).playlist_names = [p.name for p in playlists]
-                self.query_one(SongList).songs = playlists[0].songs
-            else:
-                self.query_one(Sidebar).playlist_names = []
-                self.query_one(SongList).songs = []
+            self.query_one(Sidebar).playlist_names = [p.name for p in playlists] if playlists else []
 
         initial_vol = self.playback_service.set_volume(self.config_service.config.volume)
         with contextlib.suppress(NoMatches):

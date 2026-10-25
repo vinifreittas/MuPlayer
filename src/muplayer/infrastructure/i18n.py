@@ -33,11 +33,16 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "search_placeholder": "🔍 Search for songs, artists, podcasts...",
         "settings_btn": "⚙️ Settings",
         # Sidebar Widget
-        "sidebar_library": "LIBRARY",
+        "sidebar_menu": "MENU",
         "sidebar_home": "🏠 Home",
         "sidebar_discover": "🔍 Discover",
         "sidebar_history": "⏳ History",
+        "sidebar_library": "LIBRARY",
         "sidebar_playlists": "PLAYLISTS",
+        "coming_soon": "Coming soon! 🚀",
+        # Home View
+        "home_welcome_title": "Welcome to MuPlayer 🎵",
+        "home_welcome_subtitle": "Your lightweight terminal music player",
         # SongList Widget
         "songs_title": "Songs",
         "play_all_btn": "▶ Play All",
@@ -81,11 +86,16 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "search_placeholder": "🔍 Buscar músicas, artistas, podcasts...",
         "settings_btn": "⚙️ Configurações",
         # Sidebar Widget
-        "sidebar_library": "BIBLIOTECA",
+        "sidebar_menu": "MENU",
         "sidebar_home": "🏠 Início",
         "sidebar_discover": "🔍 Descobrir",
         "sidebar_history": "⏳ Histórico",
+        "sidebar_library": "BIBLIOTECA",
         "sidebar_playlists": "PLAYLISTS",
+        "coming_soon": "Em breve! 🚀",
+        # Home View
+        "home_welcome_title": "Bem-vindo ao MuPlayer 🎵",
+        "home_welcome_subtitle": "Seu player de música leve para o terminal",
         # SongList Widget
         "songs_title": "Músicas",
         "play_all_btn": "▶ Tocar Todas",
