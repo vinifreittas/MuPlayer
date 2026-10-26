@@ -101,7 +101,7 @@ src/muplayer/
         ├── helpers.py               # Time & formatting utilities
         ├── style.tcss               # CSS stylesheet for Textual widgets
         ├── controllers/             # Mixins (PlaybackMixin, SearchMixin, NavigationMixin)
-        ├── screens/                 # Screens & Modals (ConfigurationsScreen, SelectPlaylistModal)
+        ├── screens/                 # Screens & Modals (ConfigurationsScreen, SelectPlaylistModal, TerminalTooSmallScreen)
         ├── themes/                  # Custom color themes (Spotify Dark)
         └── widgets/                 # Reactive UI components (Header, MiniPlayer, Sidebar, SongList)
 ```

@@ -2,6 +2,7 @@ import contextlib
 import logging
 from typing import Any, ClassVar
 
+from textual import events
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal
 from textual.css.query import NoMatches
@@ -14,6 +15,7 @@ from muplayer.application.playback_service import PlaybackService
 from muplayer.application.search_service import SearchService
 from muplayer.infrastructure.i18n import set_locale
 from muplayer.interface.tui.controllers import NavigationMixin, PlaybackMixin, SearchMixin
+from muplayer.interface.tui.screens import TerminalTooSmallScreen
 from muplayer.interface.tui.themes import spotify_dark_theme
 from muplayer.interface.tui.widgets import DiscoverView, Header, HomeView, MiniPlayer, SearchView, Sidebar, SongList
 
@@ -25,6 +27,8 @@ class MuPlayer(PlaybackMixin, SearchMixin, NavigationMixin, App[None]):
 
     TITLE = "MuPlayer"
     CSS_PATH = "style.tcss"
+    MIN_TERMINAL_COLS: ClassVar[int] = 80
+    MIN_TERMINAL_ROWS: ClassVar[int] = 24
     THEMES: ClassVar = [spotify_dark_theme]
     BINDINGS: ClassVar = [
         ("space", "toggle_play", "Play/Pause"),
@@ -92,3 +96,28 @@ class MuPlayer(PlaybackMixin, SearchMixin, NavigationMixin, App[None]):
         self._refresh_ui_translations()
 
         self.update_timer = self.set_interval(1.0, self._update_playback_progress, pause=True)
+        self._check_terminal_size(self.size.width, self.size.height)
+
+    def on_resize(self, event: events.Resize) -> None:
+        """Handles terminal window resize events to enforce minimum dimensions."""
+        self._check_terminal_size(event.size.width, event.size.height)
+
+    def _check_terminal_size(self, width: int, height: int) -> None:
+        """Ensures the terminal window meets minimum required dimensions."""
+        is_too_small = width < self.MIN_TERMINAL_COLS or height < self.MIN_TERMINAL_ROWS
+        is_screen_active = isinstance(self.screen, TerminalTooSmallScreen)
+
+        if is_too_small:
+            if is_screen_active:
+                self.screen.update_dimensions(width, height)
+            else:
+                self.push_screen(
+                    TerminalTooSmallScreen(
+                        current_width=width,
+                        current_height=height,
+                        min_width=self.MIN_TERMINAL_COLS,
+                        min_height=self.MIN_TERMINAL_ROWS,
+                    )
+                )
+        elif is_screen_active:
+            self.pop_screen()
