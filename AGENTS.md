@@ -10,7 +10,7 @@ This document provides high-level architectural context, coding conventions, rep
 
 ### Core Product Scope & Principles
 * **Primary Scope:** Pure YouTube streaming via `yt-dlp` (search, stream URL extraction, public playlist URL import).
-* **CLI vs TUI Boundary:** The CLI (Typer) is strictly for diagnostics, setup, and package maintenance (`setup`, `doctor`, `update`, `version`). The listening, queueing, and media playback UX is 100% contained inside the Textual TUI.
+* **CLI vs TUI Boundary:** The CLI (Typer) is strictly for diagnostics, setup, and package maintenance (`setup`, `doctor`, `log`, `update`, `version`). The listening, queueing, and media playback UX is 100% contained inside the Textual TUI.
 * **Local Library Scope:** SQLite persistence (Tortoise ORM) for user custom playlists, saved/favorite tracks, and play history.
 * **Caching & Memory Policy:** Fast disk cache (`~/.cache/MuPlayer/`) for search queries (5 min TTL) and stream URLs (1h TTL). Audio is streamed in-memory without mandatory local media files.
 * **Future Extension Roadmap:** An optional offline audio downloading mode may be added to `domain/application/infrastructure` without violating Clean Architecture boundaries.
@@ -95,7 +95,7 @@ src/muplayer/
 │   └── youtube.py                   # YouTubeMediaProvider (yt-dlp wrapper for search & audio stream extraction)
 └── interface/                       # Presentation layer
     ├── cli/                         # Typer CLI framework
-    │   └── commands/                # Subcommands (doctor, setup, update, version)
+    │   └── commands/                # Subcommands (doctor, log, setup, update, version)
     └── tui/                         # Textual TUI interface
         ├── app.py                   # MuPlayer main Textual App class
         ├── helpers.py               # Time & formatting utilities

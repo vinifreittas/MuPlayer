@@ -19,10 +19,8 @@ def _fail(msg: str) -> None:
     raise typer.Exit(code=1)
 
 
-def _validate_environment(force: bool, engines: dict, check_terminal, detect_js) -> None:
-    """Run pre-flight checks unless force mode is enabled."""
-    if force:
-        return
+def _validate_environment(engines: dict, check_terminal, detect_js) -> None:
+    """Run pre-flight checks."""
 
     if not (engines.get("mpv") or engines.get("vlc")):
         _fail(
@@ -50,8 +48,6 @@ def _validate_environment(force: bool, engines: dict, check_terminal, detect_js)
 @cli.callback(invoke_without_command=True)
 def main(
     ctx: typer.Context,
-    force: bool = typer.Option(False, "--force", "-f", help="Force start, bypassing checks."),
-    debug: bool = typer.Option(False, "--debug", "-d", help="Enable debug logging mode."),
 ) -> None:
     """Main application launcher."""
     if ctx.invoked_subcommand is not None:
@@ -98,9 +94,9 @@ def main(
                 os.add_dll_directory(str(libs_dir))
 
     # 2. Logging & Environment Validation
-    setup_logging(log_dir=get_log_dir(), log_level=logging.DEBUG if debug else logging.INFO)
+    setup_logging(log_dir=get_log_dir(), log_level=logging.DEBUG)
     engines = check_engines()
-    _validate_environment(force, engines, check_terminal_support, detect_js_runtime)
+    _validate_environment(engines, check_terminal_support, detect_js_runtime)
 
     # 2. Setup Configuration
     data_dir = get_data_dir()

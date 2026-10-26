@@ -77,10 +77,6 @@ muplayer
 uv run muplayer
 ```
 
-#### Opções de Inicialização:
-* `muplayer --debug` (ou `-d`): Ativa logs detalhados de depuração.
-* `muplayer --force` (ou `-f`): Força a inicialização ignorando verificações prévias de ambiente.
-
 ---
 
 ## 🛠️ Comandos CLI
@@ -92,6 +88,7 @@ O MuPlayer disponibiliza um conjunto completo de comandos Typer (executáveis vi
 | `muplayer` | Inicia a interface gráfica TUI principal do player. |
 | `muplayer setup` | Executa o assistente interativo de instalação de motores de áudio e dependências do sistema. |
 | `muplayer doctor` | Exibe diagnóstico completo do sistema (terminal, engines de áudio, runtime JS e diretórios XDG). |
+| `muplayer log` | Exibe os logs salvos do sistema (use `--debug` ou `-d` para exibir registros de depuração). |
 | `muplayer update` | Verifica e atualiza a instalação do MuPlayer para a versão mais recente do repositório. |
 | `muplayer version` | Exibe a versão atual do aplicativo. |
 
