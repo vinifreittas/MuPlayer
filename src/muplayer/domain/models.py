@@ -14,6 +14,7 @@ class Song(BaseModel):
     duration: int = Field(default=0, ge=0)
     source: str
     added_at: datetime | None = None
+    played_at: datetime | None = None
 
     @field_validator("source")
     @classmethod
