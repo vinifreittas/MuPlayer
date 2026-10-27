@@ -18,15 +18,15 @@ classifiers = [
 ]
 dependencies = [
     "textual>=8.2.8",
-    "yt-dlp>=2026.8.19",
+    "yt-dlp>=2026.10.26",
     "python-mpv>=1.0.8",
     "python-vlc>=3.0.21203",
-    "tortoise-orm>=1.1.8",
+    "tortoise-orm>=1.1.9",
     "aerich>=0.10.1",
     "diskcache>=5.6.3",
-    "typer>=0.27.2",
-    "pydantic>=2.13.5",
-    "platformdirs>=4.12.2",
+    "typer>=0.27.3",
+    "pydantic>=2.14.1",
+    "platformdirs>=4.13.6",
     "packaging>=26.3",
     "installed-browsers>=0.1.5",
     "yt-dlp-ejs>=0.8.0",
@@ -42,10 +42,10 @@ Bug-Tracker = "https://github.com/vinifreittas/MuPlayer/issues"
 
 [dependency-groups]
 dev = [
-    "pre-commit>=4.6.2",
-    "ruff>=0.16.10",
+    "pre-commit>=4.7.0",
+    "ruff>=0.17.3",
     "pytest>=9.1.1",
-    "pytest-asyncio>=1.4.0",
+    "pytest-asyncio>=1.4.1",
     "pytest-cov>=7.1.0",
     "deadcode>=2.4.1",
 ]
