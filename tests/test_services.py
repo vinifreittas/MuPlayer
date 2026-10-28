@@ -41,7 +41,7 @@ def test_config_service_updates_and_volume():
     config_service = ConfigService(config_port=mock_config_port)
 
     assert config_service.config.volume == 50
-    assert config_service.config.theme == "textual-dark"
+    assert config_service.config.theme == "rose-pine-moon"
 
     # Updating volume clamped
     clamped = config_service.update_volume(120)

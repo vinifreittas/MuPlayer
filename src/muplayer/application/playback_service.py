@@ -101,7 +101,7 @@ class PlaybackService:
         """Extrai URL direta de reprodução com gerenciamento de cache."""
         cache_key = f"yt:audio_url:{url}"
 
-        if self.cache:
+        if self.cache is not None:
             cached_url = self.cache.get(cache_key)
             if cached_url and isinstance(cached_url, str):
                 logger.debug("Cache hit for audio URL: '%s'", url)
@@ -110,7 +110,7 @@ class PlaybackService:
 
         audio_url = self.media_provider.extract_audio_url(url)
 
-        if audio_url and self.cache:
+        if audio_url and self.cache is not None:
             self.cache.set(cache_key, audio_url, expire=3600)  # 1 hora TTL
 
         if audio_url:
@@ -125,7 +125,7 @@ class PlaybackService:
 
     def invalidate_audio_cache(self, url: str) -> None:
         """Invalida a entrada em cache para uma URL de áudio com falha de reprodução."""
-        if self.cache:
+        if self.cache is not None:
             cache_key = f"yt:audio_url:{url}"
             self.cache.delete(cache_key)
             logger.debug(f"Invalidated cached audio URL for: '{url}'")
@@ -141,18 +141,23 @@ class PlaybackService:
         try:
             audio_url = self.extract_audio_url(url)
             if not audio_url:
-                self.invalidate_audio_cache(url)
                 self._is_playing = False
                 logger.warning("Could not resolve a playable audio URL for source: '%s'", url)
                 raise RuntimeError("playback_engine_error")
 
-            if not self.audio_player.play(audio_url):
+            try:
+                self.audio_player.play(audio_url)
+            except Exception as play_err:
+                logger.warning(
+                    "Audio player failed on cached URL for '%s': %s. Retrying with fresh URL.", url, play_err
+                )
                 self.invalidate_audio_cache(url)
                 audio_url = self.media_provider.extract_audio_url(url)
-                if not audio_url or not self.audio_player.play(audio_url):
+                if not audio_url:
                     self._is_playing = False
-                    logger.error("Audio player rejected the stream URL for source: '%s'", url)
-                    raise RuntimeError("playback_engine_error")
+                    logger.error("Failed to obtain a fresh audio URL for source: '%s'", url)
+                    raise RuntimeError("playback_engine_error") from play_err
+                self.audio_player.play(audio_url)
 
             self._is_playing = True
             return audio_url
