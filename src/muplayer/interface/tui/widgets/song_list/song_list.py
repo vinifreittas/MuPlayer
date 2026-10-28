@@ -1,4 +1,5 @@
 import contextlib
+from pathlib import Path
 
 from textual import on
 from textual.app import ComposeResult
@@ -15,6 +16,8 @@ from muplayer.interface.tui.widgets.song_item import SongItem
 
 class SongList(Vertical):
     """Isolated Widget responsible for listing the tracks of the selected playlist."""
+
+    DEFAULT_CSS = (Path(__file__).parent / "song_list.tcss").read_text(encoding="utf-8")
 
     songs = reactive[list[Song]]([])
     title: reactive[str] = reactive("")

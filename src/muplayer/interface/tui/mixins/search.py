@@ -9,8 +9,9 @@ from textual.css.query import NoMatches
 from textual.message_pump import MessagePump
 
 from muplayer.infrastructure.i18n import t
-from muplayer.interface.tui.controllers.base import safe_call_from_thread
-from muplayer.interface.tui.widgets import Header, SearchView
+from muplayer.interface.tui.mixins.base import safe_call_from_thread
+from muplayer.interface.tui.views import SearchView
+from muplayer.interface.tui.widgets import Header
 
 if TYPE_CHECKING:
     from muplayer.application.config_service import ConfigService

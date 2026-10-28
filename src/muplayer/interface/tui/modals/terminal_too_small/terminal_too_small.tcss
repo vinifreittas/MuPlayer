@@ -1,0 +1,28 @@
+TerminalTooSmallScreen {
+    align: center middle;
+    background: rgba(0, 0, 0, 0.85);
+}
+
+TerminalTooSmallScreen #small-term-box {
+    width: 54;
+    height: auto;
+    padding: 1 2;
+    border: heavy $warning;
+    background: $surface;
+    align: center middle;
+}
+
+TerminalTooSmallScreen Label {
+    text-align: center;
+    width: 100%;
+}
+
+TerminalTooSmallScreen #small-term-title {
+    color: $warning;
+    text-style: bold;
+    margin-bottom: 1;
+}
+
+TerminalTooSmallScreen #small-term-hint {
+    color: $text-muted;
+}

@@ -1,4 +1,5 @@
 import contextlib
+from pathlib import Path
 
 from textual import on
 from textual.app import ComposeResult
@@ -15,6 +16,8 @@ from muplayer.interface.tui.helpers import format_time
 
 class MiniPlayer(Horizontal):
     """Isolated Widget responsible for playback controls and status."""
+
+    DEFAULT_CSS = (Path(__file__).parent / "miniplayer.tcss").read_text(encoding="utf-8")
 
     current_song = reactive[Song | None](None)
     time_elapsed = reactive(0)

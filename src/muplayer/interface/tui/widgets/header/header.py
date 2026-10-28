@@ -1,4 +1,5 @@
 import contextlib
+from pathlib import Path
 
 from textual import events, on
 from textual.app import ComposeResult
@@ -12,6 +13,8 @@ from muplayer.infrastructure.i18n import t
 
 class Header(Horizontal):
     """Isolated Widget responsible for the top navigation bar."""
+
+    DEFAULT_CSS = (Path(__file__).parent / "header.tcss").read_text(encoding="utf-8")
 
     class HomeCalled(Message):
         pass

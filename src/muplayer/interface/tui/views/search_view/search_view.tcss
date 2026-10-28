@@ -1,0 +1,24 @@
+SearchView ListView.song-items {
+    height: 1fr;
+    padding: 0 2;
+    background: transparent;
+    border: none;
+}
+
+SearchView ListView > SongItem {
+    layout: horizontal;
+    min-height: 3;
+    height: 3;
+    padding: 1 2;
+    background: transparent;
+}
+
+SearchView ListView > SongItem:hover,
+SearchView ListView > SongItem.-hover {
+    background: $surface-lighten-1;
+}
+
+SearchView ListView > SongItem.-highlight,
+SearchView ListView:focus > SongItem.-highlight {
+    background: $surface-lighten-2;
+}

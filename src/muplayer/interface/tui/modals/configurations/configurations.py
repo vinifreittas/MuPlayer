@@ -11,6 +11,7 @@ from muplayer.infrastructure.i18n import t
 
 
 class Configurations(ModalScreen):
+    CSS_PATH = "configurations.tcss"
     BINDINGS: ClassVar = [("escape", "dismiss", "Close")]
 
     def __init__(self, config: AppConfig, **kwargs):

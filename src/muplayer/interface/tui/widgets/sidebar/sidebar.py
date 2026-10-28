@@ -1,4 +1,5 @@
 import contextlib
+from pathlib import Path
 
 from textual import on
 from textual.app import ComposeResult
@@ -13,6 +14,8 @@ from muplayer.infrastructure.i18n import t
 
 class Sidebar(Vertical):
     """Isolated Widget responsible for side navigation and playlist listings."""
+
+    DEFAULT_CSS = (Path(__file__).parent / "sidebar.tcss").read_text(encoding="utf-8")
 
     playlist_names = reactive[list[str]]([])
 

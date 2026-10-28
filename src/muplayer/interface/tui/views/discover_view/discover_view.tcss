@@ -1,0 +1,2 @@
+/* DiscoverView não tinha regras específicas no style.tcss original.
+   O layout era implícito via herança de Vertical + ContentSwitcher. */

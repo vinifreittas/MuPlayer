@@ -22,54 +22,8 @@ from muplayer.infrastructure.i18n import t
 class SelectPlaylistModal(ModalScreen[str | None]):
     """Modal for selecting or creating a playlist to add the current song to."""
 
+    CSS_PATH = "select_playlist.tcss"
     BINDINGS: ClassVar = [("escape", "cancel", "Cancel")]
-
-    DEFAULT_CSS = """
-    SelectPlaylistModal {
-        align: center middle;
-    }
-
-    #modal-container {
-        width: 50;
-        height: auto;
-        max-height: 30;
-        background: $surface;
-        border: thick $accent;
-        padding: 1 2;
-    }
-
-    #modal-title {
-        text-align: center;
-        text-style: bold;
-        color: $accent;
-        margin-bottom: 1;
-    }
-
-    #playlist-list {
-        height: auto;
-        max-height: 10;
-        border: solid $primary-darken-1;
-        margin-bottom: 1;
-    }
-
-    #new-playlist-label {
-        margin-top: 1;
-        color: $text-muted;
-    }
-
-    #new-playlist-input {
-        margin-bottom: 1;
-    }
-
-    #modal-buttons {
-        height: auto;
-        align: right middle;
-    }
-
-    #confirm-btn {
-        margin-right: 1;
-    }
-    """
 
     def __init__(self, playlists: list[Playlist], **kwargs) -> None:
         super().__init__(**kwargs)

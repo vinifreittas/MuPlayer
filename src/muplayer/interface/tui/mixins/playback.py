@@ -11,8 +11,9 @@ from textual.message_pump import MessagePump
 
 from muplayer.domain import Song
 from muplayer.infrastructure.i18n import t
-from muplayer.interface.tui.controllers.base import safe_call_from_thread
-from muplayer.interface.tui.widgets import MiniPlayer, SearchView, SongList
+from muplayer.interface.tui.mixins.base import safe_call_from_thread
+from muplayer.interface.tui.views import SearchView
+from muplayer.interface.tui.widgets import MiniPlayer, SongList
 
 if TYPE_CHECKING:
     from muplayer.application.config_service import ConfigService

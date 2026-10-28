@@ -1,0 +1,2 @@
+/* HomeView e DiscoverView não tinham regras específicas no style.tcss original.
+   O layout era implícito via herança de Vertical + ContentSwitcher. */

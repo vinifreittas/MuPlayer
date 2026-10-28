@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from textual import events
 from textual.app import ComposeResult
 from textual.containers import Horizontal
@@ -9,6 +11,8 @@ from muplayer.interface.tui.helpers import format_time
 
 class SongItem(ListItem):
     """Visual wrapper for rendering individual songs inside a ListView."""
+
+    DEFAULT_CSS = (Path(__file__).parent / "song_item.tcss").read_text(encoding="utf-8")
 
     def __init__(self, idx: int, song: Song, **kwargs):
         super().__init__(**kwargs)

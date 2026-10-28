@@ -10,9 +10,10 @@ from textual.widgets import ContentSwitcher
 
 from muplayer.domain import Song
 from muplayer.infrastructure.i18n import t
-from muplayer.interface.tui.controllers.playback import PlaybackMixin
-from muplayer.interface.tui.screens import Configurations, SelectPlaylistModal
-from muplayer.interface.tui.widgets import DiscoverView, Header, HomeView, MiniPlayer, Sidebar, SongList
+from muplayer.interface.tui.mixins.playback import PlaybackMixin
+from muplayer.interface.tui.modals import Configurations, SelectPlaylistModal
+from muplayer.interface.tui.views import DiscoverView, HomeView
+from muplayer.interface.tui.widgets import Header, MiniPlayer, Sidebar, SongList
 
 if TYPE_CHECKING:
     from muplayer.application.config_service import ConfigService

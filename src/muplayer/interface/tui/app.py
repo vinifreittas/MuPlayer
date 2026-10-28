@@ -14,10 +14,11 @@ from muplayer.application.library_service import LibraryService
 from muplayer.application.playback_service import PlaybackService
 from muplayer.application.search_service import SearchService
 from muplayer.infrastructure.i18n import set_locale
-from muplayer.interface.tui.controllers import NavigationMixin, PlaybackMixin, SearchMixin
-from muplayer.interface.tui.screens import TerminalTooSmallScreen
+from muplayer.interface.tui.mixins import NavigationMixin, PlaybackMixin, SearchMixin
+from muplayer.interface.tui.modals import TerminalTooSmallScreen
 from muplayer.interface.tui.themes import spotify_dark_theme
-from muplayer.interface.tui.widgets import DiscoverView, Header, HomeView, MiniPlayer, SearchView, Sidebar, SongList
+from muplayer.interface.tui.views import DiscoverView, HomeView, SearchView
+from muplayer.interface.tui.widgets import Header, MiniPlayer, Sidebar, SongList
 
 logger = logging.getLogger(__name__)
 

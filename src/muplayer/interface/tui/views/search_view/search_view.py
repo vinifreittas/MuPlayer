@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Vertical
@@ -12,6 +14,8 @@ from muplayer.interface.tui.widgets.song_item import SongItem
 
 class SearchView(Vertical):
     """Isolated Widget responsible for listing the tracks of the search results."""
+
+    DEFAULT_CSS = (Path(__file__).parent / "search_view.tcss").read_text(encoding="utf-8")
 
     search_results = reactive[list[Song]]([])
 

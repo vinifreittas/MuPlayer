@@ -10,6 +10,7 @@ from textual.widgets import Label
 class TerminalTooSmallScreen(ModalScreen[None]):
     """Modal screen displayed when the terminal window is smaller than minimum required dimensions."""
 
+    CSS_PATH = "terminal_too_small.tcss"
     BINDINGS: ClassVar = []
 
     def __init__(

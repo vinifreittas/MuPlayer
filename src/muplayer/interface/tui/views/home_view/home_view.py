@@ -1,4 +1,5 @@
 import contextlib
+from pathlib import Path
 
 from textual.app import ComposeResult
 from textual.containers import Vertical
@@ -10,6 +11,8 @@ from muplayer.infrastructure.i18n import t
 
 class HomeView(Vertical):
     """Isolated Widget displaying the welcome screen when no content is active."""
+
+    DEFAULT_CSS = (Path(__file__).parent / "home_view.tcss").read_text(encoding="utf-8")
 
     def compose(self) -> ComposeResult:
         yield Label(t("home_welcome_title"), id="home-title", classes="home-title")

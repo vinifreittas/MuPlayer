@@ -1,0 +1,66 @@
+SongList {
+    layout: vertical;
+    width: 1fr;
+    height: 100%;
+    padding-bottom: 0;
+    background: $background;
+    background-tint: $primary 5%;
+}
+
+SongList #content-header {
+    height: 6;
+    padding: 1 3;
+    background: transparent;
+    align: left middle;
+}
+
+SongList .view-title {
+    width: 1fr;
+    background: transparent;
+    color: $text;
+    text-style: bold;
+    content-align: left middle;
+}
+
+SongList Button#play-all-btn,
+SongList Button#play-all-btn:focus {
+    min-width: 15;
+    height: 3;
+    background: $primary;
+    color: $background;
+    text-style: bold;
+    border: none;
+    border-top: none;
+    border-bottom: none;
+}
+
+SongList Button#play-all-btn:hover {
+    background: $primary-lighten-1;
+    border-top: none;
+    border-bottom: none;
+}
+
+SongList ListView.song-items {
+    height: 1fr;
+    padding: 0 2;
+    background: transparent;
+    border: none;
+}
+
+SongList ListView > SongItem {
+    layout: horizontal;
+    min-height: 3;
+    height: 3;
+    padding: 1 2;
+    background: transparent;
+}
+
+SongList ListView > SongItem:hover,
+SongList ListView > SongItem.-hover {
+    background: $surface-lighten-1;
+}
+
+SongList ListView > SongItem.-highlight,
+SongList ListView:focus > SongItem.-highlight {
+    background: $surface-lighten-2;
+}
