@@ -15,6 +15,7 @@ RETRY_BASE_DELAY = 1.0
 YTDL_BASE_OPTS: dict[str, Any] = {
     "quiet": True,
     "no_warnings": True,
+    "noprogress": True,
     "source_address": "0.0.0.0",
     "skip_download": True,
 }
