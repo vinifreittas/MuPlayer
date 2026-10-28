@@ -5,12 +5,10 @@ from contextlib import suppress
 from datetime import datetime
 from pathlib import Path
 
-from textual.logging import TextualHandler
-
 LOG_BACKUPS = int(os.getenv("APP_LOG_BACKUPS", "5"))
 
 # External libraries that produce noisy INFO/DEBUG output irrelevant to MuPlayer diagnostics.
-_NOISY_EXTERNAL_LOGGERS = ["yt_dlp", "tortoise", "asyncio", "httpx", "urllib3", "charset_normalizer"]
+_NOISY_EXTERNAL_LOGGERS = ["yt_dlp", "tortoise", "aiosqlite", "asyncio", "httpx", "urllib3", "charset_normalizer"]
 
 
 class JsonFormatter(logging.Formatter):
@@ -53,11 +51,7 @@ def setup_logging(log_dir: Path, log_level: int = logging.DEBUG) -> logging.Logg
     for lib in _NOISY_EXTERNAL_LOGGERS:
         logging.getLogger(lib).setLevel(logging.WARNING)
 
-    # 4. Textual UI Handler Idempotency
-    if not any(isinstance(h, TextualHandler) for h in root_logger.handlers):
-        root_logger.addHandler(TextualHandler())
-
-    # 5. Smart File Handler Management
+    # 4. Smart File Handler Management
     file_handler_exists = False
     for handler in list(root_logger.handlers):
         if isinstance(handler, logging.FileHandler):
