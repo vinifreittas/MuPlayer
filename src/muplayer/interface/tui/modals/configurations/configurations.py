@@ -40,6 +40,18 @@ class Configurations(ModalScreen):
                 options=[("English", "en"), ("Português", "pt")], value=self.app_config.language, id="config-language"
             )
 
+            # 3. Theme Selection
+            yield Label(t("config_theme"))
+            theme_options = [(name, name) for name in sorted(self.app.available_themes.keys())]
+            current_theme = (
+                self.app_config.theme if self.app_config.theme in self.app.available_themes else "textual-dark"
+            )
+            yield Select(
+                options=theme_options,
+                value=current_theme,
+                id="config-theme",
+            )
+
     @on(events.Click, "#config-close-btn")
     def _on_close_click(self) -> None:
         self.action_dismiss()
@@ -51,8 +63,10 @@ class Configurations(ModalScreen):
         except ValueError:
             search_limit_val = 15
 
+        theme_val = self.query_one("#config-theme", Select).value
         new_settings = {
             "search_limit": max(1, min(search_limit_val, 50)),  # clamp between 1 and 50
             "language": self.query_one("#config-language", Select).value,
+            "theme": str(theme_val) if theme_val else "textual-dark",
         }
         self.dismiss(new_settings)

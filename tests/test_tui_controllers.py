@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 
-from muplayer.interface.tui.controllers.base import safe_call_from_thread
+from muplayer.interface.tui.mixins.base import safe_call_from_thread
 
 
 def test_safe_call_from_thread_when_running():

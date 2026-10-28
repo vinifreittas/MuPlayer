@@ -121,5 +121,7 @@ class NavigationMixin(MessagePump):
                 self.config_service.update(**new_settings)
                 if "language" in new_settings:
                     self._refresh_ui_translations()
+                if "theme" in new_settings:
+                    self.theme = new_settings["theme"]
 
         self.push_screen(Configurations(config=self.config_service.config), check_settings)

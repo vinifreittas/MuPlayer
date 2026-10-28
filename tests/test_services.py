@@ -41,12 +41,13 @@ def test_config_service_updates_and_volume():
     config_service = ConfigService(config_port=mock_config_port)
 
     assert config_service.config.volume == 50
+    assert config_service.config.theme == "textual-dark"
 
     # Updating volume clamped
     clamped = config_service.update_volume(120)
     assert clamped == 100
     mock_config_port.update.assert_called_with(volume=100)
 
-    # Updating settings with side-effect (language)
-    config_service.update(language="pt", search_limit=25)
-    mock_config_port.update.assert_called_with(language="pt", search_limit=25)
+    # Updating settings with side-effect (language) and theme
+    config_service.update(language="pt", search_limit=25, theme="nord")
+    mock_config_port.update.assert_called_with(language="pt", search_limit=25, theme="nord")

@@ -4,7 +4,7 @@ import pytest
 from textual.widgets import Label
 
 from muplayer.interface.tui.app import MuPlayer
-from muplayer.interface.tui.screens import TerminalTooSmallScreen
+from muplayer.interface.tui.modals import TerminalTooSmallScreen
 
 
 def _create_test_app() -> MuPlayer:

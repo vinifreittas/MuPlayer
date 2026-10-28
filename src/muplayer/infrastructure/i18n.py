@@ -50,6 +50,7 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "config_title": "Application Settings",
         "config_search_limit": "Max Search Results:",
         "config_language": "Language / Idioma:",
+        "config_theme": "Theme:",
         "config_close": "Close",
         # SelectPlaylistModal
         "modal_add_title": "🎵 Add to Playlist",
@@ -103,6 +104,7 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "config_title": "Configurações do Aplicativo",
         "config_search_limit": "Limite de Busca:",
         "config_language": "Idioma / Language:",
+        "config_theme": "Tema:",
         "config_close": "Fechar",
         # SelectPlaylistModal
         "modal_add_title": "🎵 Adicionar à Playlist",

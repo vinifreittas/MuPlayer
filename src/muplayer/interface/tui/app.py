@@ -16,7 +16,6 @@ from muplayer.application.search_service import SearchService
 from muplayer.infrastructure.i18n import set_locale
 from muplayer.interface.tui.mixins import NavigationMixin, PlaybackMixin, SearchMixin
 from muplayer.interface.tui.modals import TerminalTooSmallScreen
-from muplayer.interface.tui.themes import spotify_dark_theme
 from muplayer.interface.tui.views import DiscoverView, HomeView, SearchView
 from muplayer.interface.tui.widgets import Header, MiniPlayer, Sidebar, SongList
 
@@ -30,7 +29,6 @@ class MuPlayer(PlaybackMixin, SearchMixin, NavigationMixin, App[None]):
     CSS_PATH = "style.tcss"
     MIN_TERMINAL_COLS: ClassVar[int] = 80
     MIN_TERMINAL_ROWS: ClassVar[int] = 24
-    THEMES: ClassVar = [spotify_dark_theme]
     BINDINGS: ClassVar = [
         ("space", "toggle_play", "Play/Pause"),
         ("ctrl+up", "volume_up", "Volume +"),
@@ -80,9 +78,8 @@ class MuPlayer(PlaybackMixin, SearchMixin, NavigationMixin, App[None]):
 
     async def on_mount(self) -> None:
         """Handles asynchronous application initialization and resource wiring."""
-        for theme in self.THEMES:
-            self.register_theme(theme)
-        self.theme = "spotify-dark"
+        if self.config_service.config.theme in self.available_themes:
+            self.theme = self.config_service.config.theme
 
         # Wire initial playlists to sidebar; start on HomeView (no song list shown)
         playlists = await self.library_service.get_playlists()

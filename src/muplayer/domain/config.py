@@ -7,3 +7,4 @@ class AppConfig(BaseModel):
     language: Literal["en", "pt"] = Field(default="en")
     search_limit: int = Field(default=15, ge=1, le=50)
     volume: int = Field(default=80, ge=0, le=100)
+    theme: str = Field(default="rose-pine-moon")
