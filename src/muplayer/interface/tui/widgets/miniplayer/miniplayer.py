@@ -51,7 +51,7 @@ class MiniPlayer(Horizontal):
         with Vertical(id="player-controls"):
             with Horizontal(id="control-buttons"):
                 yield Button("⏮", id="prev-button", classes="control-btn")
-                yield Button("▶", id="play-button", classes="control-btn play-btn")
+                yield Button("▶", id="play-button", classes="play-btn")
                 yield Button("⏭", id="next-button", classes="control-btn")
             with Horizontal(id="progress-area"):
                 yield Label("0:00", id="time-elapsed")

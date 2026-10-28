@@ -80,6 +80,7 @@ MiniPlayer Button.control-btn:hover {
 MiniPlayer Button.play-btn,
 MiniPlayer Button.play-btn:focus {
     min-width: 5;
+    height: 3;
     background: $foreground;       
     color: $background;
     text-style: bold;
@@ -88,9 +89,11 @@ MiniPlayer Button.play-btn:focus {
     border-bottom: none;
 }
 
-MiniPlayer Button.play-btn:hover {
+MiniPlayer Button.play-btn:hover,
+MiniPlayer Button.play-btn:focus:hover {
     background: $primary-lighten-1;
     color: $background;
+    border: none;
     border-top: none;
     border-bottom: none;
 }
