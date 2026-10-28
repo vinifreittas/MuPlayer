@@ -2,23 +2,36 @@ import json
 from typing import Annotated
 
 import typer
+from rich.markup import escape
 
 from muplayer.infrastructure.logging import LOG_BACKUPS
 from muplayer.infrastructure.system import get_log_dir
 
 app = typer.Typer()
 
+LEVEL_COLORS = {
+    "DEBUG": "dim",
+    "INFO": "green",
+    "WARNING": "yellow",
+    "ERROR": "bold red",
+    "CRITICAL": "bold white on red",
+}
+
 
 def _format_log_entry(entry: dict) -> str:
     timestamp = entry.get("timestamp", "")
     level = entry.get("level", "INFO")
-    name = entry.get("name", "")
+    raw_name = entry.get("name", "")
+    name = raw_name.removeprefix("muplayer.infrastructure.").removeprefix("muplayer.")
     lineno = entry.get("lineno")
-    location = f"[{name}:{lineno}]" if lineno is not None else f"[{name}]"
-    message = entry.get("message", "")
-    line = f"[{timestamp}] {level:<8} {location} {message}"
-    if entry.get("exception"):
-        line += f"\n{entry['exception']}"
+    location = f"{name}:{lineno}" if lineno is not None else name
+    message = escape(str(entry.get("message", "")))
+
+    color = LEVEL_COLORS.get(level, "white")
+    line = f"[dim]{timestamp}[/dim] [{color}][{level}][/{color}] [cyan]{location}[/cyan]: {message}"
+    exc = entry.get("exception")
+    if exc:
+        line += f"\n[dim red]{escape(str(exc))}[/dim red]"
     return line
 
 
@@ -71,7 +84,6 @@ def log_cmd(
     """Display a saved MuPlayer log file."""
     from rich.console import Console
     from rich.rule import Rule
-    from rich.syntax import Syntax
 
     console = Console()
     log_dir = get_log_dir()
@@ -117,6 +129,6 @@ def log_cmd(
     if not filtered_content.strip():
         console.print("[dim]Log file is empty.[/dim]")
     else:
-        console.print(Syntax(filtered_content, "log", theme="ansi_dark", word_wrap=True))
+        console.print(filtered_content, highlight=False, soft_wrap=True)
 
     console.print()
