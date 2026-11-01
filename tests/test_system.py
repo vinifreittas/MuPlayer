@@ -5,12 +5,12 @@ from muplayer.infrastructure.system import (
     detect_js_runtime,
     get_bin_dir,
     get_libs_dir,
-    install_engine,
+    install_defaults,
 )
 
 
 def test_paths_resolution():
-    """Valida se os novos diretórios de binários e bibliotecas são Path válidos."""
+    """Validates that the new binary and library directories are valid Paths."""
     bin_dir = get_bin_dir()
     libs_dir = get_libs_dir()
 
@@ -21,7 +21,7 @@ def test_paths_resolution():
 
 
 def test_environment_detector_local_libs(tmp_path):
-    """Valida se check_engines detecta bibliotecas no diretório local do usuário."""
+    """Validates that check_engines detects libraries in the user's local directory."""
     with (
         patch("muplayer.infrastructure.system.environment_detector.get_libs_dir", return_value=tmp_path),
         patch("muplayer.infrastructure.system.environment_detector.find_library", return_value=None),
@@ -35,7 +35,7 @@ def test_environment_detector_local_libs(tmp_path):
 
 
 def test_environment_detector_local_binaries(tmp_path):
-    """Valida se detect_js_runtime detecta executável qjs no diretório local de binários."""
+    """Validates that detect_js_runtime detects qjs in the local binary directory."""
     with (
         patch("muplayer.infrastructure.system.environment_detector.get_bin_dir", return_value=tmp_path),
         patch("shutil.which", return_value=None),
@@ -49,21 +49,11 @@ def test_environment_detector_local_binaries(tmp_path):
         assert runtime["quickjs"]["path"] == str(fake_qjs)
 
 
-def test_engine_installer_invalid_engine():
-    """Valida se a escolha de engine inválida é rejeitada com erro amigável."""
-    success, msg = install_engine("invalid_engine")
-    assert success is False
-    assert "Invalid engine choice" in msg
-
-
-def test_engine_installer_github_download_fallback():
-    """Valida o fallback de download via GitHub API quando package manager falha."""
-    with (
-        patch("muplayer.infrastructure.system.engine_installer._install_linux", return_value=(False, "Failed")),
-        patch("muplayer.infrastructure.system.engine_installer.download_github_asset") as mock_dl,
-    ):
-        mock_dl.return_value = (True, "Installed from GitHub")
-        success, msg = install_engine("quickjs")
-        assert success is True
-        assert "Installed from GitHub" in msg
-        mock_dl.assert_called_once()
+def test_install_defaults_calls_download():
+    """Validates that install_defaults calls download_github_asset with correct OS/arch keywords."""
+    with patch("muplayer.infrastructure.system.engine_installer.download_github_asset") as mock_dl:
+        mock_dl.return_value = (True, "ok")
+        results = install_defaults()
+        assert len(results) >= 1
+        first_call_keyword = mock_dl.call_args_list[0][0][0]
+        assert "qjs-" in first_call_keyword

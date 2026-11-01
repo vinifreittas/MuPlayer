@@ -1,0 +1,45 @@
+Header {
+    dock: top;
+    layout: horizontal;
+    width: 100%;
+    height: 4;
+    padding: 0 2;
+    background: $background;
+    align: left middle;
+    border-bottom: solid $surface-lighten-2;
+}
+
+Header #title {
+    width: 20%;
+    height: 100%;
+    color: $primary;
+    text-style: bold;
+    content-align: left middle;
+}
+
+Header #title:hover {
+    color: $primary-lighten-1;
+}
+
+Header #search-box {
+    width: 50%;
+    height: 3;
+    background: transparent;
+    color: $text-muted;
+    border: round $panel;
+}
+
+Header #search-box:focus {
+    border: round $accent;
+}
+
+Header #settings-btn {
+    width: 30%;
+    height: 100%;
+    color: $text-muted;
+    content-align: right middle;
+}
+
+Header #settings-btn:hover {
+    color: $text;
+}

@@ -1,0 +1,155 @@
+name: Build & Release Assets
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Target release tag'
+        required: true
+        default: 'latest'
+
+jobs:
+  bundle-windows:
+    name: Bundle Windows assets (qjs + libmpv-2.dll)
+    runs-on: windows-latest
+
+    steps:
+      - name: Install 7zip
+        run: choco install 7zip -y
+        shell: pwsh
+
+      - name: Download qjs binaries from quickjs-ng latest release
+        shell: pwsh
+        run: |
+          $release = Invoke-RestMethod "https://api.github.com/repos/quickjs-ng/quickjs/releases/latest"
+          $assets = $release.assets
+
+          $targets = @(
+            @{ keyword = "qjs-linux-x86_64";    outname = "qjs-linux-x86_64"        },
+            @{ keyword = "qjs-linux-arm64";      outname = "qjs-linux-arm64"          },
+            @{ keyword = "qjs-macos-x86_64";    outname = "qjs-macos-x86_64"        },
+            @{ keyword = "qjs-macos-arm64";      outname = "qjs-macos-arm64"         },
+            @{ keyword = "qjs-windows-x86_64";  outname = "qjs-windows-x86_64.exe"  }
+          )
+
+          foreach ($t in $targets) {
+            $asset = $assets | Where-Object { $_.name -like "*$($t.keyword)*" } | Select-Object -First 1
+            if ($asset) {
+              Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $t.outname
+              Write-Host "Downloaded $($t.outname)"
+            } else {
+              Write-Warning "Asset not found: $($t.keyword)"
+            }
+          }
+
+      - name: Download libmpv-2.dll from mpv-winbuild-cmake latest release
+        shell: pwsh
+        run: |
+          $release = Invoke-RestMethod "https://api.github.com/repos/shinchiro/mpv-winbuild-cmake/releases/latest"
+          $asset = $release.assets | Where-Object { $_.name -like "mpv-dev-x86_64-*.7z" -and $_.name -notlike "*-v3-*" } | Select-Object -First 1
+          if ($asset) {
+            Invoke-WebRequest -Uri $asset.browser_download_url -OutFile mpv-dev.7z
+            & "C:\Program Files\7-Zip\7z.exe" e mpv-dev.7z libmpv-2.dll -y
+            Write-Host "Extracted libmpv-2.dll"
+          } else {
+            Write-Error "mpv-dev asset not found"
+          }
+
+      - name: Upload Windows assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-assets
+          path: |
+            qjs-linux-x86_64
+            qjs-linux-arm64
+            qjs-macos-x86_64
+            qjs-macos-arm64
+            qjs-windows-x86_64.exe
+            libmpv-2.dll
+
+  bundle-linux:
+    name: Bundle Linux libmpv asset
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install libmpv
+        run: sudo apt-get update && sudo apt-get install -y libmpv-dev
+
+      - name: Locate and copy libmpv shared library
+        run: |
+          LIB=$(ldconfig -p | grep 'libmpv.so' | awk '{print $NF}' | head -1)
+          cp "$LIB" libmpv.so.2
+
+      - name: Upload libmpv.so.2
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-assets
+          path: libmpv.so.2
+
+  bundle-macos:
+    name: Bundle macOS libmpv asset
+    runs-on: macos-latest
+
+    steps:
+      - name: Install mpv via Homebrew
+        run: brew install mpv
+
+      - name: Locate and copy libmpv dylib
+        run: cp "$(brew --prefix mpv)/lib/libmpv.dylib" libmpv.dylib
+
+      - name: Upload libmpv.dylib
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-assets
+          path: libmpv.dylib
+
+  upload-assets:
+    name: Verify and publish all release assets
+    needs: [bundle-windows, bundle-linux, bundle-macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all bundled assets
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - name: Verify all expected assets exist
+        run: |
+          files=(
+            "qjs-linux-x86_64"
+            "qjs-linux-arm64"
+            "qjs-macos-x86_64"
+            "qjs-macos-arm64"
+            "qjs-windows-x86_64.exe"
+            "libmpv.so.2"
+            "libmpv.dylib"
+            "libmpv-2.dll"
+          )
+          missing=()
+          for f in "${files[@]}"; do
+            if [ ! -f "$f" ]; then
+              missing+=("$f")
+            fi
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "Missing expected release assets: ${missing[*]}"
+            exit 1
+          fi
+          echo "All release assets verified successfully."
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag_name || 'latest' }}
+          files: |
+            qjs-linux-x86_64
+            qjs-linux-arm64
+            qjs-macos-x86_64
+            qjs-macos-arm64
+            qjs-windows-x86_64.exe
+            libmpv.so.2
+            libmpv.dylib
+            libmpv-2.dll

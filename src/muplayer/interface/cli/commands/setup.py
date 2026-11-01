@@ -1,6 +1,6 @@
 import typer
 
-from muplayer.infrastructure.system import check_engines, detect_js_runtime, get_detected_os, install_engine
+from muplayer.infrastructure.system import check_engines, detect_js_runtime, install_defaults
 
 app = typer.Typer()
 
@@ -11,46 +11,27 @@ def setup_cmd() -> None:
     typer.secho("\n=== MuPlayer Setup Wizard ===\n", fg="cyan", bold=True)
 
     engines = check_engines()
-
-    if path := engines["mpv"]:
-        typer.secho(f"✓ Found 'mpv' audio engine at: {path}", fg="green")
-    if path := engines["vlc"]:
-        typer.secho(f"✓ Found 'vlc' audio engine at: {path}", fg="green")
-
     js_runtime = detect_js_runtime()
-    if js_runtime:
-        runtime_name = next(iter(js_runtime.keys()))
-        typer.secho(f"✓ Found JavaScript engine: '{runtime_name}'", fg="green")
-    else:
-        typer.secho(
-            "✗ Warning: No JavaScript runtime (quickjs, node, deno, bun) was found on your system PATH.\n"
-            "  MuPlayer needs a JS runtime for stream URL extraction. Please install QuickJS or Node.js.",
-            fg="yellow",
-        )
-
-    if (engines["mpv"] or engines["vlc"]) and js_runtime:
-        typer.secho("\nSystem is fully configured! You are ready to go.", fg="green")
-        if not typer.confirm("Do you want to run the installer setup anyway?", default=False):
-            return
-
-    typer.echo(f"\nDetected OS: {get_detected_os()}")
 
     has_audio = bool(engines["mpv"] or engines["vlc"])
+    has_js = js_runtime is not None
 
-    if not has_audio or typer.confirm(
-        "Would you like to install the standard MPV audio engine?", default=not has_audio
-    ):
-        success, message = install_engine("mpv")
-        if success:
-            typer.secho(message, fg="green")
-        else:
-            typer.secho(message, fg="red" if "failed" in message.lower() or "error" in message.lower() else "yellow")
+    if has_audio:
+        typer.secho("✓ Audio engine (libmpv) found.", fg="green")
+    else:
+        typer.secho("✗ Audio engine (libmpv) not found.", fg="yellow")
 
-    if not js_runtime or typer.confirm(
-        "Would you like to install the QuickJS JavaScript engine?", default=not js_runtime
-    ):
-        success, message = install_engine("quickjs")
-        if success:
-            typer.secho(message, fg="green")
-        else:
-            typer.secho(message, fg="red" if "failed" in message.lower() or "error" in message.lower() else "yellow")
+    if has_js:
+        typer.secho("✓ JavaScript runtime (quickjs) found.", fg="green")
+    else:
+        typer.secho("✗ JavaScript runtime (quickjs) not found.", fg="yellow")
+
+    if has_audio and has_js:
+        typer.secho("\nSystem is fully configured! Nothing to install.", fg="green")
+        return
+
+    if not typer.confirm("\nDownload and install missing dependencies from GitHub?", default=True):
+        return
+
+    for _asset_name, success, message in install_defaults():
+        typer.secho(message, fg="green" if success else "red")

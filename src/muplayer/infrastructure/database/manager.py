@@ -3,6 +3,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
+from aerich import Command
 from tortoise import Tortoise, timezone
 from tortoise.expressions import F
 from tortoise.transactions import in_transaction
@@ -13,6 +14,8 @@ from muplayer.infrastructure.database.config import get_tortoise_config
 from muplayer.infrastructure.database.tables import HistoryTable, PlaylistSongTable, PlaylistTable, SongTable
 
 logger = logging.getLogger(__name__)
+
+MIGRATIONS_DIR = Path(__file__).parent / "migrations"
 
 
 class TortoiseStorageAdapter(StoragePort):
@@ -28,15 +31,27 @@ class TortoiseStorageAdapter(StoragePort):
         return get_tortoise_config(self.db_path)
 
     async def connect(self) -> None:
-        """Initializes Tortoise ORM and safely generates database schemas."""
+        """Initializes Tortoise ORM and applies pending Aerich migrations."""
         try:
             await Tortoise.init(config=self._config)
-            await Tortoise.generate_schemas(safe=True)
+            await self._run_migrations()
             self._is_connected = True
             logger.info("Database connection via Tortoise ORM established. Path: %s", self.db_path)
         except Exception as e:
             logger.error("Failed to initialize database at '%s': %s", self.db_path, e, exc_info=True)
             raise
+
+    async def _run_migrations(self) -> None:
+        """Applies pending Aerich database migrations programmatically."""
+        try:
+            command = Command(tortoise_config=self._config, app="models", location=str(MIGRATIONS_DIR))
+            await command.init()
+            upgrades = await command.upgrade(run_in_transaction=True)
+            if upgrades:
+                logger.info("Applied database migrations: %s", upgrades)
+        except Exception as e:
+            logger.debug("Automatic migration check fallback: %s. Ensuring safe schema generation.", e)
+            await Tortoise.generate_schemas(safe=True)
 
     async def disconnect(self) -> None:
         """Safely closes all open database connections and checkpoints the WAL journal."""
@@ -209,39 +224,45 @@ class TortoiseStorageAdapter(StoragePort):
         return True
 
     async def add_to_history(self, song: Song) -> None:
-        """Records a played song to history, updating timestamp if already present (upsert)."""
+        """Records a played song to history as an append-only log entry."""
         clean_source = song.source.strip()
         now = timezone.now()
 
-        async with in_transaction():
-            existing = await HistoryTable.filter(source=clean_source).order_by("-played_at").first()
-            if existing:
-                existing.played_at = now
-                existing.song_title = song.title.strip()
-                existing.song_artist = song.artist.strip()
-                await existing.save(update_fields=["played_at", "song_title", "song_artist"])
-                await HistoryTable.filter(source=clean_source).exclude(id=existing.id).delete()
-            else:
-                await HistoryTable.create(
-                    song_title=song.title.strip(),
-                    song_artist=song.artist.strip(),
-                    source=clean_source,
-                    played_at=now,
-                )
-            logger.info("Song '%s' updated in history (source=%s).", song.title, clean_source)
+        await HistoryTable.create(
+            title=song.title.strip(),
+            artist=song.artist.strip(),
+            album=song.album.strip() if song.album else "YouTube Audio",
+            duration=song.duration,
+            source=clean_source,
+            played_at=now,
+        )
+        logger.info("Song '%s' logged to history (source=%s).", song.title, clean_source)
 
     async def get_history(self, limit: int = 50) -> list[Song]:
-        """Retrieves recent listening history, sorted by timestamp latest first."""
-        rows = await HistoryTable.all().order_by("-played_at", "-id")
-        result: list[Song] = []
-        seen_sources: set[str] = set()
-
-        for r in rows:
-            if r.source in seen_sources:
-                continue
-            seen_sources.add(r.source)
-            result.append(Song(title=r.song_title, artist=r.song_artist, source=r.source))
-            if len(result) >= limit:
-                break
-
-        return result
+        """Retrieves recent listening history with smart deduplication, keeping only the latest occurrence of each song."""
+        query = """
+            SELECT id, title, artist, album, duration, source, played_at
+            FROM (
+                SELECT
+                    id, title, artist, album, duration, source, played_at,
+                    ROW_NUMBER() OVER (PARTITION BY source ORDER BY played_at DESC, id DESC) as rn
+                FROM history
+            ) sub
+            WHERE rn = 1
+            ORDER BY played_at DESC, id DESC
+            LIMIT ?
+        """
+        conn = Tortoise.get_connection("default")
+        raw_rows = await conn.execute_query_dict(query, [limit])
+        return [
+            Song(
+                id=row["id"],
+                title=row["title"],
+                artist=row["artist"],
+                album=row["album"],
+                duration=row["duration"],
+                source=row["source"],
+                played_at=row["played_at"],
+            )
+            for row in raw_rows
+        ]

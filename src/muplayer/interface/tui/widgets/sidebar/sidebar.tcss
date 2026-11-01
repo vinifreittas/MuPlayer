@@ -1,0 +1,44 @@
+Sidebar {
+    width: 28;
+    height: 100%;
+    padding: 1 1;
+    background: $background;
+    border-right: solid $surface-lighten-1;
+}
+
+Sidebar .section-title {
+    margin: 1 0 0 2;
+    color: $text-muted;
+    text-style: bold;
+}
+
+Sidebar ListView {
+    height: auto;
+    margin: 1 0;
+    padding: 0 1;
+    background: transparent;
+    border: none;
+}
+
+Sidebar ListItem {
+    height: 1;
+    padding: 0 1;
+    background: transparent;
+    color: $text-muted;
+}
+
+Sidebar ListItem:hover {
+    background: transparent;
+    color: $text;
+}
+
+Sidebar ListView > ListItem.-highlight,
+Sidebar ListView:focus > ListItem.-highlight {
+    background: $surface-lighten-1;
+    color: $text;
+    text-style: bold;
+}
+
+Sidebar ListItem > Label {
+    background: transparent;
+}

@@ -5,7 +5,7 @@ from muplayer.domain import Song
 
 
 def test_playback_service_queue_and_selection():
-    """Valida o gerenciamento de fila e seleção de faixa no PlaybackService."""
+    """Validates queue management and track selection in PlaybackService."""
     mock_audio_port = MagicMock()
     mock_media_port = MagicMock()
 
@@ -21,17 +21,17 @@ def test_playback_service_queue_and_selection():
     assert selected == song2
     assert service.active_song == song2
 
-    # Seleção de faixa por índice
+    # Select a track by index.
     selected_first = service.select_track(0)
     assert selected_first == song1
     assert service.active_song == song1
 
-    # Próxima faixa sem shuffle/repeat
+    # Next track without shuffle/repeat.
     assert service.get_next_index() == 1
 
 
 def test_config_service_updates_and_volume():
-    """Valida o funcionamento do ConfigService e atualização de configurações/volume."""
+    """Validates ConfigService behavior and settings/volume updates."""
     from muplayer.application.config_service import ConfigService
     from muplayer.domain.config import AppConfig
 
@@ -41,12 +41,13 @@ def test_config_service_updates_and_volume():
     config_service = ConfigService(config_port=mock_config_port)
 
     assert config_service.config.volume == 50
+    assert config_service.config.theme == "rose-pine-moon"
 
     # Updating volume clamped
     clamped = config_service.update_volume(120)
     assert clamped == 100
     mock_config_port.update.assert_called_with(volume=100)
 
-    # Updating settings with side-effect (language)
-    config_service.update(language="pt", search_limit=25)
-    mock_config_port.update.assert_called_with(language="pt", search_limit=25)
+    # Updating settings with side-effect (language) and theme
+    config_service.update(language="pt", search_limit=25, theme="nord")
+    mock_config_port.update.assert_called_with(language="pt", search_limit=25, theme="nord")

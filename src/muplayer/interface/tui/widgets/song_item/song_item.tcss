@@ -1,0 +1,51 @@
+SongItem {
+    layout: horizontal;
+    min-height: 3;
+    height: 3;
+    padding: 1 2;
+    background: transparent;
+}
+
+SongItem:hover,
+SongItem.-hover {
+    background: $surface-lighten-1;
+}
+
+SongItem.-highlight {
+    background: $surface-lighten-2;
+}
+
+SongItem Horizontal {
+    height: 100%;
+    align: left middle;
+}
+
+/* Song Columns */
+SongItem .song-idx {
+    width: 5%;
+    background: transparent;
+    color: $text-muted;
+    content-align: left middle;
+}
+
+SongItem .song-title {
+    width: 40%;
+    background: transparent;
+    color: $text;
+    text-style: bold;
+    content-align: left middle;
+}
+
+SongItem .song-artist {
+    width: 40%;
+    background: transparent;
+    color: $text-muted;
+    content-align: left middle;
+}
+
+SongItem .song-duration {
+    width: 15%;
+    background: transparent;
+    color: $text-muted;
+    content-align: right middle;
+}

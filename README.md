@@ -1,116 +1,108 @@
 # 🎵 MuPlayer
 
-O **MuPlayer** é um player de áudio leve e eficiente feito sob medida para o terminal (TUI), transformando o YouTube no seu serviço de streaming pessoal. Projetado para desenvolvedores e entusiastas de linha de comando que buscam escutar música e podcasts sem distrações do navegador ou consumo excessivo de memória.
+**MuPlayer** is a lightweight and efficient terminal-based audio player (TUI), turning YouTube into your personal streaming service. It is designed for developers and command-line enthusiasts who want to listen to music and podcasts without browser distractions or excessive memory usage.
 
-Ele utiliza `yt-dlp` para buscas e extração de URLs de stream, `mpv` ou `vlc` para reprodução contínua de áudio, o framework `Textual` para a interface rica em TUI e `SQLite` (via Tortoise ORM) para gerenciamento local de biblioteca e playlists.
-
----
-
-## ✨ Principais Funcionalidades & Qualidades
-
-* **Leve e Rápido:** Consumo mínimo de CPU e memória RAM (sem a sobrecarga de navegadores web).
-* **Streaming Direto:** Reprodução instantânea de áudio via stream puramente em memória, sem necessidade de download prévio.
-* **Interface TUI Moderna:** Interface responsiva construída com Textual, suporte a atalhos de teclado (Vim-style e media keys), temas visuais (Spotify Dark) e MiniPlayer.
-* **Biblioteca Local Completa:** Gerenciamento de playlists personalizadas, faixas salvas/favoritas e histórico de reprodução via SQLite.
-* **Importação Rápida:** Importação de playlists públicas do YouTube diretamente por link/URL.
-* **Diagnóstico e Fallback Inteligente:** Auto-detecção de dependências na inicialização e alternância dinâmica entre motores de áudio (`mpv` e `vlc`).
+It uses `yt-dlp` for search and stream URL extraction, `mpv` or `vlc` for continuous audio playback, the `Textual` framework for its rich TUI, and `SQLite` (via Tortoise ORM) for local library and playlist management.
 
 ---
 
-## 📋 Requisitos do Sistema
+## ✨ Main Features and Qualities
 
-### Dependências do Sistema
+* **Lightweight and Fast:** Minimal CPU and RAM usage (without browser overhead).
+* **Direct Streaming:** Instant audio playback streamed entirely in memory, with no prior download required.
+* **Modern TUI:** Responsive interface built with Textual, keyboard shortcuts (Vim-style and media keys), visual themes (Spotify Dark), and MiniPlayer.
+* **Complete Local Library:** Management of custom playlists, saved/favorite tracks, and playback history through SQLite.
+* **Fast Import:** Import public YouTube playlists directly from a link/URL.
+* **Smart Diagnostics and Fallback:** Automatic dependency detection at startup and dynamic switching between audio engines (`mpv` and `vlc`).
 
-| Dependência | Opções |
+---
+
+## 📋 System Requirements
+
+### System Dependencies
+
+| Dependency | Options |
 | :--- | :--- |
-| **Engine de Áudio** | `mpv` *(recomendado)* ou `vlc` |
+| **Audio Engine** | `mpv` *(recommended)* or `vlc` |
 | **JavaScript Runtime** | `quickjs`, `node`, `deno` ou `bun` |
-| **Terminal compatível** | Suporte a cores e TTY interativo |
-| **Navegador Web** | Chrome, Firefox, Brave, etc. *(usado para extração de cookies pelo yt-dlp)* |
+| **Compatible Terminal** | Color and interactive TTY support |
+| **Web Browser** | Chrome, Firefox, Brave, etc. *(used by yt-dlp for cookie extraction)* |
 
-> 💡 *Execute `muplayer setup` para instalar as dependências do sistema automaticamente, ou `muplayer doctor` para verificar o estado do ambiente.*
+> 💡 *Run `muplayer setup` to install system dependencies automatically, or `muplayer doctor` to check the environment.*
 
-### Dependências Python
+### Python Dependencies
 
-Python `>= 3.12` e o gerenciador [uv](https://docs.astral.sh/uv/) instalado no sistema. Todas as bibliotecas Python são gerenciadas automaticamente pelo `uv`.
+Python `>= 3.12` and the [uv](https://docs.astral.sh/uv/) package manager must be installed. All Python libraries are managed automatically by `uv`.
 
 ---
 
-## 🚀 Instalação e Uso via `uv`
+## 🚀 Installation and Usage with `uv`
 
-O **MuPlayer** foi projetado para ser gerenciado e executado exclusivamente utilizando o `uv`.
+**MuPlayer** is designed to be managed and run exclusively with `uv`.
 
-### 1. Instalação (Ferramenta Global)
+### 1. Installation (Global Tool)
 
-Instale o MuPlayer como uma ferramenta global no seu terminal via `uv tool`:
+Install MuPlayer as a global terminal tool with `uv tool`:
 
 ```bash
 uv tool install git+https://github.com/vinifreittas/MuPlayer.git
 ```
 
-> 💡 *Caso prefira rodar diretamente sem instalar globalmente, você pode utilizar `uvx`:*
-> ```bash
-> uvx git+https://github.com/vinifreittas/MuPlayer.git
-> ```
+### 2. Initial Setup (Interactive Assistant)
 
-### 2. Configuração Inicial (Assistente Interativo)
-
-Execute o assistente de diagnóstico para verificar e orientar a instalação de dependências do sistema:
+Run the diagnostic assistant to check and guide the installation of system dependencies:
 
 ```bash
-# Se instalado via uv tool:
+# If installed via uv tool:
 muplayer setup
 
-# Em ambiente de desenvolvimento local (clone do repositório):
+# In a local development environment (repository clone):
 uv run muplayer setup
 ```
 
-### 3. Iniciar o Player
+### 3. Start the Player
 
-Após a configuração inicial, inicie o player TUI:
+After the initial setup, start the TUI player:
 
 ```bash
-# Se instalado via uv tool:
+# If installed via uv tool:
 muplayer
 
-# Em desenvolvimento local:
+# In local development:
 uv run muplayer
 ```
 
-#### Opções de Inicialização:
-* `muplayer --debug` (ou `-d`): Ativa logs detalhados de depuração.
-* `muplayer --force` (ou `-f`): Força a inicialização ignorando verificações prévias de ambiente.
-
 ---
 
-## 🛠️ Comandos CLI
+## 🛠️ CLI Commands
 
-O MuPlayer disponibiliza um conjunto completo de comandos Typer (executáveis via `muplayer <comando>` ou `uv run muplayer <comando>`):
+MuPlayer provides a complete set of Typer commands (available through `muplayer <command>` or `uv run muplayer <command>`):
 
-| Comando | Descrição |
+| Command | Description |
 | :--- | :--- |
-| `muplayer` | Inicia a interface gráfica TUI principal do player. |
-| `muplayer setup` | Executa o assistente interativo de instalação de motores de áudio e dependências do sistema. |
-| `muplayer doctor` | Exibe diagnóstico completo do sistema (terminal, engines de áudio, runtime JS e diretórios XDG). |
-| `muplayer update` | Verifica e atualiza a instalação do MuPlayer para a versão mais recente do repositório. |
-| `muplayer version` | Exibe a versão atual do aplicativo. |
+| `muplayer` | Starts the player's main TUI. |
+| `muplayer setup` | Runs the interactive assistant for installing audio engines and system dependencies. |
+| `muplayer doctor` | Displays a complete system diagnosis (terminal, audio engines, JS runtime, and XDG directories). |
+| `muplayer log` | Displays saved system logs (use `--debug` or `-d` to show debug records). |
+| `muplayer update` | Checks for and installs the latest MuPlayer version from the repository. |
+| `muplayer version` | Displays the current application version. |
 
 ---
 
-## 📁 Armazenamento e Configuração (Padrão XDG)
+## 📁 Storage and Configuration (XDG Standard)
 
-Os dados do MuPlayer são mantidos em diretórios padrão do sistema operacional gerenciados pelo `platformdirs`:
+MuPlayer data is stored in standard operating system directories managed by `platformdirs`:
 
-* **Banco de Dados e Configuração:** `~/.local/share/MuPlayer/` (`app_data.db`, `config.json`)
-* **Cache de Buscas e URLs:** `~/.cache/MuPlayer/` (cache de buscas com 5 min TTL e URLs de stream com 1h TTL)
-* **Logs do Sistema:** `~/.local/state/MuPlayer/logs/`
+* **Database and Configuration:** `~/.local/share/MuPlayer/` (`app_data.db`, `config.json`)
+* **Search and URL Cache:** `~/.cache/MuPlayer/` (5-minute search cache and 1-hour stream URL cache)
+* **System Logs:** `~/.local/state/MuPlayer/logs/`
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+## 🛠️ Technologies Used
 
-* **[Textual](https://textualize.io):** Framework gráfico para terminal (TUI).
-* **[yt-dlp](https://github.com/yt-dlp/yt-dlp):** Busca e extração de streams de áudio do YouTube.
-* **[mpv](https://mpv.io) / [VLC](https://www.videolan.org):** Motores de reprodução de áudio de alta fidelidade.
-* **[Tortoise ORM](https://tortoise.github.io) & [SQLite](https://www.sqlite.org):** Persistência assíncrona para biblioteca local e playlists.
-* **[Typer](https://typer.tiangolo.com) & [Rich](https://rich.readthedocs.io):** Framework de linha de comando (CLI) e formatação visual de relatórios.
+* **[Textual](https://textualize.io):** Terminal user interface (TUI) framework.
+* **[yt-dlp](https://github.com/yt-dlp/yt-dlp):** YouTube audio stream search and extraction.
+* **[mpv](https://mpv.io) / [VLC](https://www.videolan.org):** High-fidelity audio playback engines.
+* **[Tortoise ORM](https://tortoise.github.io) & [SQLite](https://www.sqlite.org):** Asynchronous persistence for the local library and playlists.
+* **[Typer](https://typer.tiangolo.com) & [Rich](https://rich.readthedocs.io):** Command-line interface (CLI) framework and report formatting.

@@ -15,6 +15,7 @@ RETRY_BASE_DELAY = 1.0
 YTDL_BASE_OPTS: dict[str, Any] = {
     "quiet": True,
     "no_warnings": True,
+    "noprogress": True,
     "source_address": "0.0.0.0",
     "skip_download": True,
 }
@@ -54,7 +55,7 @@ class YouTubeMediaProvider(SearchPort, MediaPort):
         logger.debug("YouTubeMediaProvider initialized with specialized YoutubeDL instances.")
 
     def close(self) -> None:
-        """Encerra e limpa os recursos das instâncias do yt-dlp."""
+        """Closes and cleans up resources held by the yt-dlp instances."""
         try:
             self._search_ydl.close()
             self._extractor_ydl.close()

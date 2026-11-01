@@ -4,7 +4,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class Song(BaseModel):
-    # Permite que o Pydantic leia diretamente objetos de ORM usando `model_validate`
+    # Allows Pydantic to read ORM objects directly with `model_validate`.
     model_config = ConfigDict(from_attributes=True)
 
     id: int | None = None
@@ -14,6 +14,7 @@ class Song(BaseModel):
     duration: int = Field(default=0, ge=0)
     source: str
     added_at: datetime | None = None
+    played_at: datetime | None = None
 
     @field_validator("source")
     @classmethod
@@ -42,7 +43,7 @@ class Song(BaseModel):
 
 
 class Playlist(BaseModel):
-    # Permite que o Pydantic leia diretamente objetos de ORM usando `model_validate`
+    # Allows Pydantic to read ORM objects directly with `model_validate`.
     model_config = ConfigDict(from_attributes=True)
 
     id: int | None = None

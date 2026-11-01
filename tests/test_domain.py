@@ -5,23 +5,23 @@ from muplayer.domain import Playlist, QueueState, Song
 
 
 def test_song_methods():
-    """Valida métodos e propriedades da entidade Song com source obrigatório."""
+    """Validates Song entity methods and properties with a required source."""
     song_valid = Song(title="Track 1", artist="Artist", duration=120, source="http://example.com/audio")
     assert song_valid.duration == 120
     assert song_valid.has_source is True
     assert song_valid.source == "http://example.com/audio"
 
-    # Source vazio ou com apenas espaços deve lançar ValidationError
+    # An empty or whitespace-only source should raise ValidationError.
     with pytest.raises(ValidationError):
         Song(title="Track 2", artist="Artist", duration=100, source="   ")
 
-    # Source ausente deve lançar ValidationError
+    # A missing source should raise ValidationError.
     with pytest.raises(ValidationError):
         Song(title="Track 3", artist="Artist", duration=100)  # type: ignore[call-arg]
 
 
 def test_playlist_methods():
-    """Valida métodos de cálculo e busca na entidade Playlist."""
+    """Validates Playlist entity calculation and lookup methods."""
     song1 = Song(id=10, title="Song 1", artist="Artist 1", duration=100, source="http://example.com/1")
     song2 = Song(id=20, title="Song 2", artist="Artist 2", duration=250, source="http://example.com/2")
     playlist = Playlist(name="Favorites", songs=[song1, song2])
@@ -35,7 +35,7 @@ def test_playlist_methods():
 
 
 def test_queue_state_methods():
-    """Valida os métodos puros de navegação e gerenciamento da fila em QueueState."""
+    """Validates the pure navigation and queue management methods in QueueState."""
     queue = QueueState()
     song1 = Song(id=1, title="Song A", artist="Artist A", source="http://a.com")
     song2 = Song(id=2, title="Song B", artist="Artist B", source="http://b.com")
