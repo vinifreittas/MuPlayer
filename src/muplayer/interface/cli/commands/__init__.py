@@ -8,7 +8,7 @@ from muplayer.interface.cli.commands.version import app as version_app
 
 
 def register_commands(cli: typer.Typer) -> None:
-    """Registra todos os subcomandos do Typer no CLI principal."""
+    """Register all Typer subcommands with the main CLI."""
     cli.add_typer(version_app)
     cli.add_typer(doctor_app)
     cli.add_typer(log_app)

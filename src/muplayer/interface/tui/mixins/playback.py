@@ -41,15 +41,15 @@ class PlaybackMixin(MessagePump):
     def _play_track(self, index: int) -> None:
         """Selects track in service and triggers background worker for audio."""
         logger.debug("_play_track(%d): called.", index)
-        # 1. O service para o player e atualiza o estado interno (is_playing, is_loading).
+        # 1. The service pauses the player and updates its internal state (is_playing, is_loading).
         song = self.playback_service.select_track(index)
         if not song:
             logger.debug("_play_track(%d): select_track returned None, aborting.", index)
             return
 
         logger.debug("_play_track(%d): '%s' selected. Syncing UI reactives without watcher.", index, song.title)
-        # 2. Sincroniza os reativos da UI sem acionar o watcher (que chamaria pause() novamente).
-        #    Textual armazena o valor interno do reativo em _reactive_{name}.
+        # 2. Synchronize UI reactives without triggering the watcher (which would call pause() again).
+        #    Textual stores the reactive's internal value in _reactive_{name}.
         self._reactive_is_playing = False  # type: ignore[attr-defined]
         self._reactive_current_time = 0  # type: ignore[attr-defined]
         with contextlib.suppress(NoMatches):
@@ -57,7 +57,7 @@ class PlaybackMixin(MessagePump):
             self.query_one(MiniPlayer).current_song = song
             self.query_one(MiniPlayer).time_elapsed = 0
 
-        # 3. Inicia a thread de carregamento/extração em background
+        # 3. Start the background loading/extraction thread.
         logger.debug("_play_track(%d): starting audio worker.", index)
         self._start_audio_worker()
 
@@ -126,7 +126,7 @@ class PlaybackMixin(MessagePump):
     # --------------------------------------------------------------------------
 
     def action_toggle_play(self) -> None:
-        # Se a música estiver em processo de extração/carregamento, ignora a tecla
+        # Ignore the key while the song is being extracted or loaded.
         if getattr(self.playback_service, "is_loading", False):
             return
 

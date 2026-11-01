@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 class LibraryService:
-    """Orquestra casos de uso da biblioteca musical e persistência de dados."""
+    """Orchestrates music library use cases and data persistence."""
 
     def __init__(self, storage: StoragePort) -> None:
         self.storage = storage
@@ -19,17 +19,17 @@ class LibraryService:
         await self.storage.disconnect()
 
     async def get_playlists(self, limit: int = 50, offset: int = 0) -> list[Playlist]:
-        """Obtém todas as playlists com paginação."""
+        """Retrieves all playlists with pagination."""
         return await self.storage.get_playlists(limit=limit, offset=offset)
 
     async def get_playlist_by_name(self, name: str) -> Playlist | None:
-        """Busca uma playlist específica pelo nome."""
+        """Retrieves a specific playlist by name."""
         if not name or not name.strip():
             return None
         return await self.storage.get_playlist_by_name(name.strip())
 
     async def create_playlist(self, name: str) -> tuple[bool, str, Playlist | None]:
-        """Cria uma nova playlist se o nome for válido e não existente."""
+        """Creates a new playlist if the name is valid and unused."""
         clean_name = name.strip() if name else ""
         if not clean_name:
             return False, "Nome da playlist não pode ser vazio.", None
@@ -44,7 +44,7 @@ class LibraryService:
         return False, f"Falha ao criar playlist '{clean_name}'.", None
 
     async def delete_playlist(self, name: str) -> tuple[bool, str]:
-        """Remove uma playlist e suas associações."""
+        """Deletes a playlist and its associations."""
         clean_name = name.strip() if name else ""
         if not clean_name:
             return False, "Nome da playlist inválido."
@@ -56,9 +56,9 @@ class LibraryService:
 
     async def add_song_to_playlist(self, playlist_name: str, song: Song) -> tuple[bool, str]:
         """
-        Adiciona uma música a uma playlist existente ou cria uma nova se não existir.
+        Adds a song to an existing playlist or creates one if it does not exist.
 
-        Retorna (sucesso: bool, mensagem_ou_status: str).
+        Returns (success: bool, message_or_status: str).
         """
         clean_name = playlist_name.strip() if playlist_name else ""
         if not clean_name:
@@ -83,9 +83,9 @@ class LibraryService:
 
     async def remove_song_from_playlist(self, playlist_name: str, song_index: int) -> tuple[bool, str]:
         """
-        Remove a música de determinado índice da playlist.
+        Removes the song at the specified playlist index.
 
-        Retorna (sucesso: bool, mensagem_ou_status: str).
+        Returns (success: bool, message_or_status: str).
         """
         clean_name = playlist_name.strip() if playlist_name else ""
         if not clean_name:

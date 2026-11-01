@@ -28,7 +28,7 @@ async def test_add_to_history_basic(storage_adapter):
 
 
 async def test_add_to_history_appends_log_and_get_history_deduplicates(storage_adapter):
-    """Garante que a re-execução da mesma música gera novos registros de log e o get_history deduplica pela última ocorrência."""
+    """Ensures replaying a song creates new log records and get_history deduplicates by the latest occurrence."""
     source_link = "https://youtube.com/watch?v=track_one"
     song1 = Song(title="Track One", artist="Artist One", album="Album A", duration=180, source=source_link)
     await storage_adapter.add_to_history(song1)
@@ -38,7 +38,7 @@ async def test_add_to_history_appends_log_and_get_history_deduplicates(storage_a
     initial_id = entry_initial.id
     initial_timestamp = entry_initial.played_at
 
-    # Toca outra música intermediária
+    # Play another song in between.
     song2 = Song(
         title="Track Two",
         artist="Artist Two",
@@ -48,19 +48,19 @@ async def test_add_to_history_appends_log_and_get_history_deduplicates(storage_a
     )
     await storage_adapter.add_to_history(song2)
 
-    # Pequena pausa para garantir avanço de timestamp
+    # Brief pause to ensure the timestamp advances.
     await asyncio.sleep(0.01)
 
-    # Toca a música 1 novamente com título atualizado
+    # Play song 1 again with an updated title.
     song1_updated = Song(
         title="Track One (Remaster)", artist="Artist One", album="Album A", duration=185, source=source_link
     )
     await storage_adapter.add_to_history(song1_updated)
 
-    # Total de registros no banco de dados deve ser 3 (log cumulativo de execuções)
+    # The database must contain 3 records (cumulative execution log).
     assert await HistoryTable.all().count() == 3
 
-    # As 2 ocorrências de track_one devem existir como linhas distintas
+    # The 2 track_one occurrences must exist as separate rows.
     track_one_entries = await HistoryTable.filter(source=source_link).order_by("played_at")
     assert len(track_one_entries) == 2
     assert track_one_entries[0].id == initial_id
@@ -68,7 +68,7 @@ async def test_add_to_history_appends_log_and_get_history_deduplicates(storage_a
     assert track_one_entries[1].played_at > initial_timestamp
     assert track_one_entries[1].title == "Track One (Remaster)"
 
-    # A busca por histórico inteligente deve trazer song1 no topo (mais recente) e deduplicada
+    # The smart history query should return song1 first (most recent) and deduplicated.
     history = await storage_adapter.get_history()
     assert len(history) == 2
     assert history[0].source == source_link
@@ -79,8 +79,8 @@ async def test_add_to_history_appends_log_and_get_history_deduplicates(storage_a
 
 
 async def test_verification_only_by_source(storage_adapter):
-    """Verificação e deduplicação ocorrem EXCLUSIVAMENTE por source."""
-    # 1. Títulos e artistas idênticos, mas com URLs (sources) diferentes -> devem ser 2 registros distintos
+    """Verifies that deduplication occurs exclusively by source."""
+    # 1. Identical titles and artists with different URLs (sources) must produce 2 distinct records.
     song_v1 = Song(title="Bohemian Rhapsody", artist="Queen", source="https://youtube.com/watch?v=link_studio")
     song_v2 = Song(title="Bohemian Rhapsody", artist="Queen", source="https://youtube.com/watch?v=link_live")
     await storage_adapter.add_to_history(song_v1)
@@ -93,7 +93,7 @@ async def test_verification_only_by_source(storage_adapter):
         "https://youtube.com/watch?v=link_live",
     }
 
-    # 2. Títulos e artistas diferentes, mas mesma URL (source) -> log tem 3 rows, consulta traz 2 deduplicadas
+    # 2. Different titles and artists with the same URL (source) produce 3 log rows and 2 deduplicated results.
     song_renamed = Song(
         title="Queen - Bohemian Rhapsody (Official)",
         artist="Queen Band",
@@ -110,7 +110,7 @@ async def test_verification_only_by_source(storage_adapter):
 
 
 async def test_add_to_history_allows_duplicate_sources_and_preserves_metadata(storage_adapter):
-    """Garante que a restrição UNIQUE foi removida e que metadados completos são preservados."""
+    """Ensures the UNIQUE constraint was removed and complete metadata is preserved."""
     s1 = Song(title="Song 1", artist="Artist", album="Album Deluxe", duration=320, source="https://yt.com/dup")
     s2 = Song(title="Song 1 (Again)", artist="Artist", album="Album Deluxe", duration=320, source="https://yt.com/dup")
 
@@ -128,7 +128,7 @@ async def test_add_to_history_allows_duplicate_sources_and_preserves_metadata(st
 
 
 async def test_get_history_limit(storage_adapter):
-    """Garante respeito ao parâmetro limit e ordenação do mais recente para o mais antigo."""
+    """Ensures the limit parameter and newest-to-oldest ordering are respected."""
     for i in range(10):
         song = Song(title=f"Song {i}", artist="Artist", source=f"https://yt.com/{i}")
         await storage_adapter.add_to_history(song)
@@ -140,7 +140,7 @@ async def test_get_history_limit(storage_adapter):
 
 
 async def test_legacy_history_schema_migration(tmp_path):
-    """Garante que bancos de dados existentes com schema legado são migrados suavemente."""
+    """Ensures existing databases with a legacy schema are migrated smoothly."""
     import sqlite3
 
     db_file = tmp_path / "test_legacy_migrate.db"
@@ -185,7 +185,7 @@ async def test_legacy_history_schema_migration(tmp_path):
     assert history[0].duration == 0
     assert history[0].source == "https://yt.com/legacy"
 
-    # Testa inserção duplicada para garantir que a constraint UNIQUE foi removida no migration
+    # Test duplicate insertion to ensure the UNIQUE constraint was removed in the migration.
     s_dup = Song(title="Legacy Song 2", artist="Legacy Artist", source="https://yt.com/legacy")
     await adapter.add_to_history(s_dup)
     assert await HistoryTable.all().count() == 2
@@ -194,7 +194,7 @@ async def test_legacy_history_schema_migration(tmp_path):
 
 
 async def test_disconnect_checkpoints_wal_and_cleans_files(tmp_path):
-    """Garante que o disconnect() executa checkpoint do WAL e não deixa arquivos -wal ou -shm soltos."""
+    """Ensures disconnect() checkpoints WAL and does not leave -wal or -shm files behind."""
     db_file = tmp_path / "test_wal_clean.db"
     adapter = TortoiseStorageAdapter(db_file)
     await adapter.connect()

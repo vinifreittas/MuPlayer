@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 class PlaybackService:
-    """Gerencia fila, engine de áudio, resolução de mídia e regras de reprodução."""
+    """Manages the queue, audio engine, media resolution, and playback rules."""
 
     def __init__(
         self, audio_player: AudioPort, media_provider: MediaPort, cache: diskcache.Cache | None = None
@@ -24,7 +24,7 @@ class PlaybackService:
         self._current_position: int = 0
 
     # ------------------------------------------------------------------
-    # Propriedades de conveniência
+    # Convenience properties
     # ------------------------------------------------------------------
 
     @property
@@ -76,11 +76,11 @@ class PlaybackService:
     # ------------------------------------------------------------------
 
     def set_queue(self, songs: list[Song], start_song: Song | None = None) -> int:
-        """Atualiza a fila atual e retorna o índice da música selecionada."""
+        """Updates the current queue and returns the selected song index."""
         return self._queue.set_songs(songs, start_song=start_song)
 
     def select_track(self, index: int) -> Song | None:
-        """Valida e define a faixa ativa no índice especificado."""
+        """Validates and sets the active track at the specified index."""
         selected = self._queue.select_track(index)
         if selected is None:
             self.pause()
@@ -98,7 +98,7 @@ class PlaybackService:
     # ------------------------------------------------------------------
 
     def extract_audio_url(self, url: str) -> str | None:
-        """Extrai URL direta de reprodução com gerenciamento de cache."""
+        """Extracts a direct playback URL with cache management."""
         cache_key = f"yt:audio_url:{url}"
 
         if self.cache is not None:
@@ -111,7 +111,7 @@ class PlaybackService:
         audio_url = self.media_provider.extract_audio_url(url)
 
         if audio_url and self.cache is not None:
-            self.cache.set(cache_key, audio_url, expire=3600)  # 1 hora TTL
+            self.cache.set(cache_key, audio_url, expire=3600)  # 1-hour TTL
 
         if audio_url:
             return audio_url
@@ -124,14 +124,14 @@ class PlaybackService:
         return url
 
     def invalidate_audio_cache(self, url: str) -> None:
-        """Invalida a entrada em cache para uma URL de áudio com falha de reprodução."""
+        """Invalidates the cached audio URL after a playback failure."""
         if self.cache is not None:
             cache_key = f"yt:audio_url:{url}"
             self.cache.delete(cache_key)
             logger.debug(f"Invalidated cached audio URL for: '{url}'")
 
     def prepare_and_play_active_song(self) -> str:
-        """Extrai a URL e inicia o player. Deve ser executado em thread separada."""
+        """Extracts the URL and starts the player in a separate thread."""
         if not self._queue.active_song or not self._queue.active_song.source:
             self._is_loading = False
             raise ValueError("playback_missing_url")
@@ -193,7 +193,7 @@ class PlaybackService:
         return self._is_playing
 
     # ------------------------------------------------------------------
-    # Volume (fonte da verdade: audio_player)
+    # Volume (source of truth: audio_player)
     # ------------------------------------------------------------------
 
     def get_volume(self) -> int:
@@ -212,11 +212,11 @@ class PlaybackService:
     # ------------------------------------------------------------------
 
     def get_next_index(self) -> int | None:
-        """Determina o índice da próxima faixa com base nas regras de shuffle e repeat."""
+        """Determines the next track index based on shuffle and repeat rules."""
         return self._queue.get_next_index()
 
     def get_prev_index(self) -> int:
-        """Retorna o índice da faixa anterior considerando o tempo corrido."""
+        """Returns the previous track index based on elapsed time."""
         return self._queue.get_prev_index(current_time=self._current_position)
 
     # ------------------------------------------------------------------
@@ -224,7 +224,7 @@ class PlaybackService:
     # ------------------------------------------------------------------
 
     def update_progress(self) -> tuple[int, bool]:
-        """Atualiza a posição atual de reprodução."""
+        """Updates the current playback position."""
         if not self._is_playing or not self._queue.active_song or self.audio_player.is_paused:
             return self._current_position, False
 

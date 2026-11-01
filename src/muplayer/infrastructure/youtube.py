@@ -55,7 +55,7 @@ class YouTubeMediaProvider(SearchPort, MediaPort):
         logger.debug("YouTubeMediaProvider initialized with specialized YoutubeDL instances.")
 
     def close(self) -> None:
-        """Encerra e limpa os recursos das instâncias do yt-dlp."""
+        """Closes and cleans up resources held by the yt-dlp instances."""
         try:
             self._search_ydl.close()
             self._extractor_ydl.close()

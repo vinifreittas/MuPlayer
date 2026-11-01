@@ -27,7 +27,7 @@ def _create_test_app() -> MuPlayer:
 
 @pytest.mark.asyncio
 async def test_terminal_size_sufficient_does_not_show_warning():
-    """Valida que terminais com dimensões normais (>= 80x24) não exibem a tela de aviso."""
+    """Validates that terminals with normal dimensions (>= 80x24) do not show the warning screen."""
     app = _create_test_app()
     async with app.run_test(size=(90, 30)):
         assert not isinstance(app.screen, TerminalTooSmallScreen)
@@ -35,7 +35,7 @@ async def test_terminal_size_sufficient_does_not_show_warning():
 
 @pytest.mark.asyncio
 async def test_terminal_size_too_small_on_start_shows_warning():
-    """Valida que iniciar o player com terminal menor que 80x24 exibe o aviso."""
+    """Validates that starting the player with a terminal smaller than 80x24 shows the warning."""
     app = _create_test_app()
     async with app.run_test(size=(60, 20)):
         assert isinstance(app.screen, TerminalTooSmallScreen)
@@ -43,7 +43,7 @@ async def test_terminal_size_too_small_on_start_shows_warning():
 
 @pytest.mark.asyncio
 async def test_terminal_resize_auto_dismiss_and_reappear():
-    """Valida ciclo completo: início pequeno -> amplia -> volta ao normal -> encolhe -> aviso reaparece."""
+    """Validates the full cycle: starts small -> expands -> returns to normal -> shrinks -> warning reappears."""
     app = _create_test_app()
     async with app.run_test(size=(60, 20)) as pilot:
         assert isinstance(app.screen, TerminalTooSmallScreen)
@@ -61,7 +61,7 @@ async def test_terminal_resize_auto_dismiss_and_reappear():
 
 @pytest.mark.asyncio
 async def test_terminal_too_small_updates_dimension_label():
-    """Valida se o rótulo de dimensão atual se atualiza ao redimensionar mantendo o aviso."""
+    """Validates that the current dimension label updates while the warning remains visible."""
     app = _create_test_app()
     async with app.run_test(size=(60, 20)) as pilot:
         screen = app.screen

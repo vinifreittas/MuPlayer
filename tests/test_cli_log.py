@@ -32,7 +32,7 @@ SAMPLE_JSONL_LOG = (
 
 
 def test_filter_log_content_jsonl_without_debug():
-    """Valida se _filter_log_content descarta JSONL DEBUG e formata INFO/WARN/ERROR com exception."""
+    """Validates that _filter_log_content drops JSONL DEBUG and formats INFO/WARN/ERROR with exceptions."""
     filtered = _filter_log_content(SAMPLE_JSONL_LOG, include_debug=False)
 
     assert "Application starting" in filtered
@@ -46,7 +46,7 @@ def test_filter_log_content_jsonl_without_debug():
 
 
 def test_filter_log_content_jsonl_with_debug():
-    """Valida se _filter_log_content com include_debug=True inclui registros DEBUG."""
+    """Validates that _filter_log_content includes DEBUG records with include_debug=True."""
     filtered = _filter_log_content(SAMPLE_JSONL_LOG, include_debug=True)
 
     assert "Application starting" in filtered
@@ -55,7 +55,7 @@ def test_filter_log_content_jsonl_with_debug():
 
 
 def test_filter_log_content_legacy_plaintext_fallback():
-    """Valida retrocompatibilidade com logs legados em texto plano."""
+    """Validates backward compatibility with legacy plain-text logs."""
     filtered = _filter_log_content(
         "[2026-10-26 10:00:00] INFO     [mod:1] info msg\n[2026-10-26 10:00:01] DEBUG    [mod:2] debug msg",
         include_debug=False,
@@ -65,7 +65,7 @@ def test_filter_log_content_legacy_plaintext_fallback():
 
 
 def test_cli_root_rejects_debug_and_force():
-    """Garante que as flags --debug e --force foram removidas do CLI raiz e são rejeitadas."""
+    """Ensures --debug and --force were removed from and are rejected by the root CLI."""
     res_debug = runner.invoke(cli, ["--debug"])
     assert res_debug.exit_code != 0
     assert "no such option" in res_debug.output.lower() or "unknown option" in res_debug.output.lower()
@@ -76,7 +76,7 @@ def test_cli_root_rejects_debug_and_force():
 
 
 def test_cli_root_help_does_not_list_debug_or_force():
-    """Garante que --debug e --force não aparecem no --help do comando raiz."""
+    """Ensures --debug and --force do not appear in the root command's --help."""
     result = runner.invoke(cli, ["--help"])
     assert result.exit_code == 0
     assert "--debug" not in result.output
@@ -84,7 +84,7 @@ def test_cli_root_help_does_not_list_debug_or_force():
 
 
 def test_cli_log_no_logs_found(tmp_path):
-    """Valida saída de erro amigável quando nenhum arquivo de log existe."""
+    """Validates the friendly error output when no log file exists."""
     with patch("muplayer.interface.cli.commands.log.get_log_dir", return_value=tmp_path):
         result = runner.invoke(cli, ["log"])
         assert result.exit_code == 1
@@ -92,52 +92,52 @@ def test_cli_log_no_logs_found(tmp_path):
 
 
 def test_cli_log_filtering_integration(tmp_path):
-    """Valida filtragem no comando 'muplayer log' com e sem a flag --debug em arquivos JSONL."""
+    """Validates 'muplayer log' filtering with and without --debug on JSONL files."""
     log_file = tmp_path / "app-2026-10-26_10-00-00.log"
     log_file.write_text(SAMPLE_JSONL_LOG, encoding="utf-8")
 
     with patch("muplayer.interface.cli.commands.log.get_log_dir", return_value=tmp_path):
-        # 1. Padrão: sem --debug (filtra mensagens DEBUG)
+        # 1. Default: without --debug (filters DEBUG messages).
         res_default = runner.invoke(cli, ["log"])
         assert res_default.exit_code == 0
         assert "Application starting" in res_default.output
         assert "Failed to play stream" in res_default.output
         assert "Cache miss for key" not in res_default.output
 
-        # 2. Com --debug: inclui tudo
+        # 2. With --debug: includes everything.
         res_debug = runner.invoke(cli, ["log", "--debug"])
         assert res_debug.exit_code == 0
         assert "Application starting" in res_debug.output
         assert "Cache miss for key" in res_debug.output
 
-        # 3. Com flag curta -d: inclui tudo
+        # 3. With the short -d flag: includes everything.
         res_short = runner.invoke(cli, ["log", "-d"])
         assert res_short.exit_code == 0
         assert "Cache miss for key" in res_short.output
 
 
 def test_cli_log_invalid_index(tmp_path):
-    """Valida tratamento de índices de log inválidos ou fora do intervalo."""
+    """Validates handling of invalid or out-of-range log indexes."""
     log_file = tmp_path / "app-2026-10-26_10-00-00.log"
     log_file.write_text(SAMPLE_JSONL_LOG, encoding="utf-8")
 
     with patch("muplayer.interface.cli.commands.log.get_log_dir", return_value=tmp_path):
-        # Índice 0 (fora do range 1..5)
+        # Index 0 (outside the 1..5 range).
         res_zero = runner.invoke(cli, ["log", "0"])
         assert res_zero.exit_code == 1
         assert "Invalid index 0" in res_zero.output
 
-        # Índice maior do que a quantidade de logs existentes
+        # Index greater than the number of existing logs.
         res_overflow = runner.invoke(cli, ["log", "2"])
         assert res_overflow.exit_code == 1
         assert "Log #2 does not exist" in res_overflow.output
 
 
 def test_validate_environment_checks():
-    """Valida pre-flight checks em _validate_environment sem o parâmetro force."""
+    """Validates _validate_environment pre-flight checks without the force parameter."""
     import typer
 
-    # Falha quando não há motores de áudio
+    # Fails when no audio engines are available.
     with pytest.raises(typer.Exit):
         _validate_environment(
             engines={"mpv": None, "vlc": None},
@@ -145,7 +145,7 @@ def test_validate_environment_checks():
             detect_js=lambda: True,
         )
 
-    # Falha quando terminal não é compatível
+    # Fails when the terminal is not compatible.
     with pytest.raises(typer.Exit):
         _validate_environment(
             engines={"mpv": "/path/libmpv.so", "vlc": None},
@@ -153,7 +153,7 @@ def test_validate_environment_checks():
             detect_js=lambda: True,
         )
 
-    # Falha quando JS runtime não é encontrado
+    # Fails when the JS runtime is not found.
     with pytest.raises(typer.Exit):
         _validate_environment(
             engines={"mpv": "/path/libmpv.so", "vlc": None},
@@ -161,7 +161,7 @@ def test_validate_environment_checks():
             detect_js=lambda: False,
         )
 
-    # Sucesso quando tudo está presente
+    # Succeeds when everything is available.
     _validate_environment(
         engines={"mpv": "/path/libmpv.so", "vlc": None},
         check_terminal=lambda: (True, None),
@@ -170,7 +170,7 @@ def test_validate_environment_checks():
 
 
 def test_setup_logging_emits_jsonl(tmp_path):
-    """Valida se setup_logging grava entradas estruturadas em JSON Lines."""
+    """Validates that setup_logging writes structured JSON Lines entries."""
     import json
 
     logger = setup_logging(log_dir=tmp_path)
@@ -183,7 +183,7 @@ def test_setup_logging_emits_jsonl(tmp_path):
     lines = log_files[0].read_text(encoding="utf-8").strip().splitlines()
     assert len(lines) >= 2
 
-    # Verifica se cada linha é um JSON válido com os campos esperados
+    # Verify that each line is valid JSON with the expected fields.
     records = [json.loads(line) for line in lines]
     assert any(r["level"] == "INFO" and "Test info message" in r["message"] for r in records)
     assert any(r["level"] == "DEBUG" and "Test debug message" in r["message"] for r in records)
