@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import logging
+import threading
 from typing import TYPE_CHECKING, Any
 
 from textual import on, work
@@ -57,16 +58,23 @@ class PlaybackMixin(MessagePump):
             self.query_one(MiniPlayer).current_song = song
             self.query_one(MiniPlayer).time_elapsed = 0
 
-        # 3. Start the background loading/extraction thread.
+        # 3. Cancel any in-flight pre-playback worker and issue a fresh token for the new one.
+        if hasattr(self, "_cancel_event"):
+            self._cancel_event.set()
+        self._cancel_event = threading.Event()
+
         logger.debug("_play_track(%d): starting audio worker.", index)
-        self._start_audio_worker()
+        self._start_audio_worker(self._cancel_event)
 
     @work(thread=True, exclusive=True)
-    def _start_audio_worker(self) -> None:
+    def _start_audio_worker(self, cancel: threading.Event) -> None:
         """Background thread worker for media loading and playback engine ignition."""
         logger.debug("Worker: started.")
         try:
-            self.playback_service.prepare_and_play_active_song()
+            result = self.playback_service.prepare_and_play_active_song(cancel=cancel)
+            if result is None:
+                logger.debug("Worker: superseded by a newer track selection, exiting silently.")
+                return
             logger.debug("Worker: prepare_and_play succeeded. Scheduling is_playing=True on UI thread.")
             safe_call_from_thread(self, setattr, self, "is_playing", True)
             active_song = self.playback_service.active_song

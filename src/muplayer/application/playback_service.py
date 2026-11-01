@@ -1,4 +1,5 @@
 import logging
+import threading
 
 import diskcache
 
@@ -130,7 +131,7 @@ class PlaybackService:
             self.cache.delete(cache_key)
             logger.debug(f"Invalidated cached audio URL for: '{url}'")
 
-    def prepare_and_play_active_song(self) -> str:
+    def prepare_and_play_active_song(self, cancel: threading.Event | None = None) -> str | None:
         """Extracts the URL and starts the player in a separate thread."""
         if not self._queue.active_song or not self._queue.active_song.source:
             self._is_loading = False
@@ -145,6 +146,10 @@ class PlaybackService:
                 logger.warning("Could not resolve a playable audio URL for source: '%s'", url)
                 raise RuntimeError("playback_engine_error")
 
+            if cancel and cancel.is_set():
+                logger.debug("prepare_and_play: superseded after URL extraction, aborting playback.")
+                return None
+
             try:
                 self.audio_player.play(audio_url)
             except Exception as play_err:
@@ -157,6 +162,9 @@ class PlaybackService:
                     self._is_playing = False
                     logger.error("Failed to obtain a fresh audio URL for source: '%s'", url)
                     raise RuntimeError("playback_engine_error") from play_err
+                if cancel and cancel.is_set():
+                    logger.debug("prepare_and_play: superseded after retry extraction, aborting playback.")
+                    return None
                 self.audio_player.play(audio_url)
 
             self._is_playing = True
