@@ -25,20 +25,24 @@ jobs:
           $assets = $release.assets
 
           $targets = @(
-            @{ keyword = "qjs-linux-x86_64";    outname = "qjs-linux-x86_64"        },
-            @{ keyword = "qjs-linux-arm64";      outname = "qjs-linux-arm64"          },
-            @{ keyword = "qjs-macos-x86_64";    outname = "qjs-macos-x86_64"        },
-            @{ keyword = "qjs-macos-arm64";      outname = "qjs-macos-arm64"         },
-            @{ keyword = "qjs-windows-x86_64";  outname = "qjs-windows-x86_64.exe"  }
+            @{ keywords = @("qjs-linux-x86_64");                         outname = "qjs-linux-x86_64"        },
+            @{ keywords = @("qjs-linux-arm64", "qjs-linux-aarch64");     outname = "qjs-linux-arm64"         },
+            @{ keywords = @("qjs-macos-x86_64", "qjs-darwin-x86_64");    outname = "qjs-macos-x86_64"        },
+            @{ keywords = @("qjs-macos-arm64", "qjs-darwin-arm64");      outname = "qjs-macos-arm64"         },
+            @{ keywords = @("qjs-windows-x86_64");                       outname = "qjs-windows-x86_64.exe"  }
           )
 
           foreach ($t in $targets) {
-            $asset = $assets | Where-Object { $_.name -like "*$($t.keyword)*" } | Select-Object -First 1
+            $asset = $null
+            foreach ($keyword in $t.keywords) {
+              $asset = $assets | Where-Object { $_.name -eq $keyword -or $_.name -like "*$keyword*" } | Select-Object -First 1
+              if ($asset) { break }
+            }
             if ($asset) {
               Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $t.outname
               Write-Host "Downloaded $($t.outname)"
             } else {
-              Write-Warning "Asset not found: $($t.keyword)"
+              Write-Warning "Asset not found for any of: $($t.keywords -join ', ')"
             }
           }
 
