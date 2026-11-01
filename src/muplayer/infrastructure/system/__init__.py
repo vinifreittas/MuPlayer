@@ -1,7 +1,6 @@
 from muplayer.infrastructure.system.engine_installer import (
     get_detected_os,
-    get_package_manager,
-    install_engine,
+    install_defaults,
 )
 from muplayer.infrastructure.system.environment_detector import (
     check_engines,
@@ -38,10 +37,9 @@ __all__ = [
     "get_engine_version",
     "get_libs_dir",
     "get_log_dir",
-    "get_package_manager",
     "get_terminal_dimensions",
     "get_version",
-    "install_engine",
+    "install_defaults",
     "is_running_in_venv",
     "perform_update",
 ]
