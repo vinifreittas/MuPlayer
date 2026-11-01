@@ -48,11 +48,6 @@ Install MuPlayer as a global terminal tool with `uv tool`:
 uv tool install git+https://github.com/vinifreittas/MuPlayer.git
 ```
 
-> 💡 *If you prefer to run it directly without a global installation, you can use `uvx`:*
-> ```bash
-> uvx git+https://github.com/vinifreittas/MuPlayer.git
-> ```
-
 ### 2. Initial Setup (Interactive Assistant)
 
 Run the diagnostic assistant to check and guide the installation of system dependencies:
