@@ -17,19 +17,19 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
+    "typer>=0.27.3",
     "textual>=8.2.8",
     "yt-dlp>=2026.10.26",
+    "yt-dlp-ejs>=0.8.0",
     "python-mpv>=1.0.8",
     "python-vlc>=3.0.21203",
+    "diskcache>=5.6.3",
     "tortoise-orm>=1.1.9",
     "aerich>=0.10.1",
-    "diskcache>=5.6.3",
-    "typer>=0.27.3",
     "pydantic>=2.14.1",
     "platformdirs>=4.13.6",
     "packaging>=26.3",
     "installed-browsers>=0.1.5",
-    "yt-dlp-ejs>=0.8.0",
 ]
 
 [project.scripts]

@@ -1,7 +1,7 @@
 # 📋 Backlog pra versão 1.0.0
 
 ## 🐛 Terminal e Logs
-- [ ] Corrigir vazamento de log no terminal.
+- [X] Corrigir vazamento de log no terminal.
 - [X] Definir tamanho mínimo do terminal (com ajuste automático, se possível).
 - [X] Refatorar sistema de histórico:
   - Corrigir bugs no histórico e migrar para registro real de execução baseado no modelo `SongTable`.
@@ -18,3 +18,4 @@
 - [ ] Analisar e melhorar a estrutura e a documentação do projeto.
 - [ ] Garantir suporte e funcionamento ideal multiplataforma.
 - [ ] Realizar testes completos em todas as funcionalidades (*features*).
+- [ ] Diminuir dependencias do sistema trazendo mais coisas já embutidas, assim facilitando a vida do usuário.
