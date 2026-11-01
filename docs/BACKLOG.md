@@ -17,6 +17,5 @@
 ## 🛠️ Quality and Maintenance
 - [ ] Analyze and improve the project's structure and documentation.
 - [ ] Ensure cross-platform support and optimal operation.
-- [ ] Perform complete tests for all features.
 - [X] Reduce system dependencies by bundling more functionality, making the application easier to use.
-- [ ] Fix asynchronous music playback. When a new song is started while another is still in the pre-playback phase, the old thread must be terminated immediately. 
+- [X] Fix asynchronous music playback. When a new song is started while another is still in the pre-playback phase, the old thread must be terminated immediately. 
