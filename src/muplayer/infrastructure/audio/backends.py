@@ -1,10 +1,28 @@
 from __future__ import annotations
 
+import ctypes
 import logging
+import os
 from abc import ABC, abstractmethod
 from ctypes.util import find_library
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+
+def _preload_native_lib(lib_path: str) -> None:
+    """Pre-loads a native shared library so that subsequent imports find it.
+
+    On Linux/macOS: ctypes.CDLL(path) is enough — the linker reuses the already-loaded lib.
+    On Windows: python-mpv/vlc search for DLLs by name in %PATH%, so we must add the DLL's
+    directory to PATH *before* the import, in addition to loading it via ctypes.
+    """
+    p = Path(lib_path)
+    if p.is_absolute() and p.parent.is_dir():
+        lib_dir = str(p.parent)
+        if lib_dir not in os.environ.get("PATH", ""):
+            os.environ["PATH"] = f"{lib_dir}{os.pathsep}{os.environ.get('PATH', '')}"
+    ctypes.CDLL(lib_path)
 
 
 class PlayerBackend(ABC):
@@ -70,9 +88,7 @@ class MPVBackend(PlayerBackend):
 
     def __init__(self, lib_path: str | None = None) -> None:
         if lib_path:
-            import ctypes
-
-            ctypes.CDLL(lib_path)  # pre-load lib before import mpv resolves it
+            _preload_native_lib(lib_path)
         import mpv
 
         self._player = mpv.MPV(video=False, ytdl=False)
@@ -132,9 +148,7 @@ class VLCBackend(PlayerBackend):
 
     def __init__(self, lib_path: str | None = None) -> None:
         if lib_path:
-            import ctypes
-
-            ctypes.CDLL(lib_path)  # pre-load lib before import vlc resolves it
+            _preload_native_lib(lib_path)
         import vlc
 
         self._vlc = vlc
