@@ -68,7 +68,11 @@ class MPVBackend(PlayerBackend):
         except Exception:
             return False
 
-    def __init__(self) -> None:
+    def __init__(self, lib_path: str | None = None) -> None:
+        if lib_path:
+            import ctypes
+
+            ctypes.CDLL(lib_path)  # pre-load lib before import mpv resolves it
         import mpv
 
         self._player = mpv.MPV(video=False, ytdl=False)
@@ -126,7 +130,11 @@ class VLCBackend(PlayerBackend):
         except Exception:
             return False
 
-    def __init__(self) -> None:
+    def __init__(self, lib_path: str | None = None) -> None:
+        if lib_path:
+            import ctypes
+
+            ctypes.CDLL(lib_path)  # pre-load lib before import vlc resolves it
         import vlc
 
         self._vlc = vlc

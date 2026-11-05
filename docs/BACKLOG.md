@@ -15,6 +15,7 @@
 - [ ] Implement deleting a playlist.
 
 ## 🛠️ Quality and Maintenance
+- [X] Fix audio player to find executables
 - [ ] Analyze and improve the project's structure and documentation.
 - [ ] Ensure cross-platform support and optimal operation.
 - [X] Reduce system dependencies by bundling more functionality, making the application easier to use.

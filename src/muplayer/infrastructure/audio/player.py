@@ -18,8 +18,9 @@ _ENGINE_MAP: dict[str, type[PlayerBackend]] = {
 class AudioPlayerAdapter(AudioPort):
     """Handles core audio playback features using a standard PlayerBackend interface."""
 
-    def __init__(self, engine: Literal["mpv", "vlc"]) -> None:
+    def __init__(self, engine: Literal["mpv", "vlc"], lib_path: str | None = None) -> None:
         self._engine = engine
+        self._lib_path = lib_path
         self._player: PlayerBackend | None = None
         logger.debug(f"AudioPlayerAdapter wrapper instantiated with engine='{engine}' (lazy loading active).")
 
@@ -36,7 +37,7 @@ class AudioPlayerAdapter(AudioPort):
         if backend_cls is None:
             raise ValueError(f"Unknown audio engine: '{self._engine}'. Valid options: {list(_ENGINE_MAP)}.")
         try:
-            return backend_cls()
+            return backend_cls(lib_path=self._lib_path)
         except Exception as e:
             raise RuntimeError(f"Failed to initialize '{self._engine}' backend: {e}") from e
 

@@ -111,7 +111,8 @@ def main(
         cache = diskcache.Cache(str(get_cache_dir()))
         storage = TortoiseStorageAdapter(db_path=data_dir / "app_data.db")
         player_engine = "mpv" if engines.get("mpv") else "vlc"
-        audio_player = AudioPlayerAdapter(engine=player_engine)
+        lib_path = engines.get(player_engine)
+        audio_player = AudioPlayerAdapter(engine=player_engine, lib_path=lib_path)
         youtube_provider = YouTubeMediaProvider(js_runtime=detect_js_runtime(), browser=get_default_browser())
 
         app = MuPlayer(
