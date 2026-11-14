@@ -10,7 +10,7 @@ It uses `yt-dlp` for search and stream URL extraction, `mpv` or `vlc` for contin
 
 * **Lightweight and Fast:** Minimal CPU and RAM usage (without browser overhead).
 * **Direct Streaming:** Instant audio playback streamed entirely in memory, with no prior download required.
-* **Modern TUI:** Responsive interface built with Textual, keyboard shortcuts (Vim-style and media keys), visual themes (Spotify Dark), and MiniPlayer.
+* **Modern TUI:** Responsive interface built with Textual, media keyboard shortcuts, built-in themes (e.g., Rosé Pine Moon, Nord), and MiniPlayer.
 * **Complete Local Library:** Management of custom playlists, saved/favorite tracks, and playback history through SQLite.
 * **Fast Import:** Import public YouTube playlists directly from a link/URL.
 * **Smart Diagnostics and Fallback:** Automatic dependency detection at startup and dynamic switching between audio engines (`mpv` and `vlc`).
@@ -24,7 +24,7 @@ It uses `yt-dlp` for search and stream URL extraction, `mpv` or `vlc` for contin
 | Dependency | Options |
 | :--- | :--- |
 | **Audio Engine** | `mpv` *(recommended)* or `vlc` |
-| **JavaScript Runtime** | `quickjs`, `node`, `deno` ou `bun` |
+| **JavaScript Runtime** | `quickjs`, `node`, `deno`, or `bun` |
 | **Compatible Terminal** | Color and interactive TTY support |
 | **Web Browser** | Chrome, Firefox, Brave, etc. *(used by yt-dlp for cookie extraction)* |
 
@@ -74,6 +74,20 @@ uv run muplayer
 
 ---
 
+## ⌨️ Keyboard Controls
+
+| Keybinding | Action | Description |
+| :--- | :--- | :--- |
+| `space` | Play / Pause | Toggle playback |
+| `ctrl+up` / `ctrl+down` | Volume | Increase / Decrease volume (+/- 5%) |
+| `ctrl+right` / `ctrl+left` | Navigation | Next track / Previous track |
+| `s` | Shuffle | Toggle shuffle mode |
+| `r` | Repeat | Toggle repeat mode |
+| `a` | Add to Playlist | Open modal to add current track to a playlist |
+| `esc` | Close / Dismiss | Close open modal or dialog |
+
+---
+
 ## 🛠️ CLI Commands
 
 MuPlayer provides a complete set of Typer commands (available through `muplayer <command>` or `uv run muplayer <command>`):
@@ -83,7 +97,7 @@ MuPlayer provides a complete set of Typer commands (available through `muplayer 
 | `muplayer` | Starts the player's main TUI. |
 | `muplayer setup` | Runs the interactive assistant for installing audio engines and system dependencies. |
 | `muplayer doctor` | Displays a complete system diagnosis (terminal, audio engines, JS runtime, and XDG directories). |
-| `muplayer log` | Displays saved system logs (use `--debug` or `-d` to show debug records). |
+| `muplayer log [index]` | Displays saved system logs (`-d`/`--debug` includes debug records, `<index>` selects older logs). |
 | `muplayer update` | Checks for and installs the latest MuPlayer version from the repository. |
 | `muplayer version` | Displays the current application version. |
 
